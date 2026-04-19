@@ -1,6 +1,6 @@
 -- LeafVE_Protocol.lua
 -- Single source of truth for addon versioning and post-wipe quarantine logic.
--- Fully Lua 5.0 / WoW 1.12 compatible.
+-- Compatible with WoW 3.3.5 / Lua 5.1.
 
 -- ---------------------------------------------------------------------------
 -- Constants

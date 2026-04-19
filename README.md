@@ -1,10 +1,10 @@
 # 🍃 Leaf Village Legends
 
-**A comprehensive guild contribution tracker and gamification addon for World of Warcraft (Vanilla / Classic 1.12).**
+**A comprehensive guild contribution tracker and gamification addon for World of Warcraft (Wrath 3.3.5).**
 
 The Leaf Village Legends addon transforms our guild experience by tracking member contributions, awarding badges, managing leaderboards, and fostering community engagement — all themed around the Naruto-inspired Leaf Village guild hierarchy.
 
-![Version](https://img.shields.io/badge/Version-14.5--green) ![Interface](https://img.shields.io/badge/Interface-1.12-blue) ![Language](https://img.shields.io/badge/Language-Lua-purple)
+![Version](https://img.shields.io/badge/Version-15.0--green) ![Interface](https://img.shields.io/badge/Interface-3.3.5-blue) ![Language](https://img.shields.io/badge/Language-Lua%205.1-purple)
 
 ---
 
@@ -199,8 +199,8 @@ Only **Hokage**, **Sannin**, and **Anbu** ranks can access the Admin panel.
 
 ## 🐛 Compatibility
 
-- **WoW Interface:** 1.12 (Vanilla / Classic)
-- **Lua Version:** 5.0 compatible (includes `string.match` polyfill for Lua 5.0 environments)
+- **WoW Interface:** 3.3.5 (Wrath of the Lich King)
+- **Lua Version:** 5.1
 - **Optional Dependencies:** None required; integrates with `LeafVE_AchTest` addon if present.
 
 ---

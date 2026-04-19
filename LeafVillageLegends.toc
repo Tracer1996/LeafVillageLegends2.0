@@ -1,4 +1,4 @@
-## Interface: 11200
+## Interface: 30300
 ## Title: Leaf Village Legends
 ## Notes: Track guild contributions and leaderboards
 ## Author: YourName
@@ -7,6 +7,8 @@
 ## SavedVariablesPerCharacter: LeafVE_DB
 ## OptionalDeps: AtlasLoot
 
+Styles.lua
+UI_Modernization.lua
 LeafVE_Protocol.lua
 LeafVE_ItemIcons.lua
 LeafVillageLegends.lua

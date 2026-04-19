@@ -2,22 +2,6 @@ LeafVE_DB = LeafVE_DB or {}
 LeafVE_GlobalDB = LeafVE_GlobalDB or {}
 AtlasLoot_Data = AtlasLoot_Data or {}
 
--- Lua 5.0 compatibility: string.match was introduced in Lua 5.1
-if not string.match then
-  string.match = function(s, pattern, init)
-    local t = {string.find(s, pattern, init)}
-    if not t[1] then return nil end
-    if table.getn(t) > 2 then
-      local captures = {}
-      for i = 3, table.getn(t) do
-        captures[i - 2] = t[i]
-      end
-      return unpack(captures)
-    end
-    return string.sub(s, t[1], t[2])
-  end
-end
-
 LeafVE = LeafVE or {}
 LeafVE.name = "LeafVillageLegends"
 LeafVE.prefix = "LeafVE"
@@ -32,6 +16,8 @@ LeafVE.minCompatVersion = "14.3"
 
 -- The latest published version; used to detect when the running addon is outdated.
 local LATEST_VERSION = "15.0"
+local LEAFVE_STYLE = _G.LeafVE_Styles or {}
+local LEAFVE_UI_MODERN = _G.LeafVE_UIModernization or {}
 
 local SEP = "\31"
 local SECONDS_PER_DAY = 86400
@@ -354,7 +340,7 @@ local CLASS_CIRCLE_COORDS = {
   PALADIN = {0,    0.25, 0.5,  0.75},
 }
 
-local CLASS_COLORS = {
+local CLASS_COLORS = (LEAFVE_STYLE and LEAFVE_STYLE.classColors) or {
   WARRIOR = {0.78, 0.61, 0.43}, PALADIN = {0.96, 0.55, 0.73}, HUNTER = {0.67, 0.83, 0.45},
   ROGUE = {1.00, 0.96, 0.41}, PRIEST = {1.00, 1.00, 1.00}, SHAMAN = {0.14, 0.35, 1.00},
   MAGE = {0.41, 0.80, 0.94}, WARLOCK = {0.58, 0.51, 0.79}, DRUID = {1.00, 0.49, 0.04},
@@ -367,11 +353,17 @@ local FACTION_BACKGROUNDS = {
   Alliance = {0.05, 0.25, 0.60},  -- Alliance: blue
 }
 
+local styleColors = (LEAFVE_STYLE and LEAFVE_STYLE.colors) or {}
 local THEME = {
-  bg = {0.05, 0.05, 0.06, 0.96}, insetBG = {0.02, 0.02, 0.03, 0.88},
-  white = {0.96, 0.96, 0.96, 1.00}, leaf = {0.20, 0.78, 0.35, 1.00},
-  leaf2 = {0.12, 0.55, 0.26, 1.00}, gold = {1.00, 0.82, 0.20, 1.00},
-  border = {0.28, 0.28, 0.30, 1.00}, soft = {0.18, 0.18, 0.20, 1.00},
+  bg = styleColors.bgDark or {0.05, 0.05, 0.06, 0.96},
+  insetBG = styleColors.bgPanel or {0.02, 0.02, 0.03, 0.88},
+  white = styleColors.white or {0.96, 0.96, 0.96, 1.00},
+  leaf = styleColors.uncommon or {0.20, 0.78, 0.35, 1.00},
+  leaf2 = styleColors.rare or {0.12, 0.55, 0.26, 1.00},
+  gold = {1.00, 0.82, 0.20, 1.00},
+  epic = styleColors.epic or {0.64, 0.21, 0.93, 1.00},
+  border = styleColors.border or {0.28, 0.28, 0.30, 1.00},
+  soft = styleColors.soft or {0.18, 0.18, 0.20, 1.00},
 }
 
 WORK_ORDER_PROFESSION_ORDER = {
@@ -4192,8 +4184,25 @@ function LeafVE:OnInstanceExit()
   self.instanceIsRaid = false
 end
 
-function LeafVE:OnBossKillChat(msg)
-  local bossName = ExtractBossNameFromDeathMessage(msg)
+local function IsGUIDInPlayerGroup(sourceGUID)
+  if not sourceGUID or not UnitGUID then return true end
+  if UnitGUID("player") == sourceGUID then return true end
+  for i = 1, 4 do
+    local token = "party" .. i
+    if UnitExists(token) and UnitGUID(token) == sourceGUID then
+      return true
+    end
+  end
+  for i = 1, 40 do
+    local token = "raid" .. i
+    if UnitExists(token) and UnitGUID(token) == sourceGUID then
+      return true
+    end
+  end
+  return false
+end
+
+function LeafVE:HandleBossKillDetected(bossName, dedupToken)
   if not bossName then return end
   if not KNOWN_BOSSES[bossName] then return end
   local me = ShortName(UnitName("player"))
@@ -4207,7 +4216,9 @@ function LeafVE:OnBossKillChat(msg)
 
   -- Dedup: ignore if this boss was already awarded within the last 10 seconds
   local now = Now()
-  if self.recentBossKills[bossName] and (now - self.recentBossKills[bossName]) < BOSS_KILL_DEDUP_WINDOW then return end
+  local dedupKey = tostring(dedupToken or bossName)
+  if self.recentBossKills[dedupKey] and (now - self.recentBossKills[dedupKey]) < BOSS_KILL_DEDUP_WINDOW then return end
+  self.recentBossKills[dedupKey] = now
   self.recentBossKills[bossName] = now
 
   self.instanceBossesKilledThisRun = self.instanceBossesKilledThisRun + 1
@@ -4225,6 +4236,25 @@ function LeafVE:OnBossKillChat(msg)
     if LeafVE.UI and LeafVE.UI.Refresh then LeafVE.UI:Refresh() end
     self:BroadcastLeaderboardData()
   end
+end
+
+function LeafVE:OnBossKillChat(msg)
+  local bossName = ExtractBossNameFromDeathMessage(msg)
+  if not bossName then return end
+  self:HandleBossKillDetected(bossName, bossName)
+end
+
+function LeafVE:OnBossKillCombatLog(timestamp, subEvent, sourceGUID, sourceName, sourceFlags, destGUID, destName, destFlags)
+  if subEvent ~= "PARTY_KILL" and subEvent ~= "UNIT_DIED" then
+    return
+  end
+  if not destName or not KNOWN_BOSSES[destName] then
+    return
+  end
+  if sourceGUID and not IsGUIDInPlayerGroup(sourceGUID) then
+    return
+  end
+  self:HandleBossKillDetected(destName, destGUID or destName)
 end
 
 function LeafVE:OnQuestTurnedIn()
@@ -11045,6 +11075,9 @@ local function TabButton(parent, text, name)
   b:SetHeight(20)
   b:SetText(text)
   SkinButtonAccent(b)
+  if LEAFVE_UI_MODERN and LEAFVE_UI_MODERN.StyleButton then
+    LEAFVE_UI_MODERN:StyleButton(b)
+  end
   return b
 end
 
@@ -15292,6 +15325,9 @@ function LeafVE:ApplyWorkOrderSpellInfo(recipe)
   end
 
   local iconPath = NormalizeIconPath(spellInfo.data and spellInfo.data["icon"])
+  if not iconPath and recipe.spellId and GetSpellTexture then
+    iconPath = NormalizeIconPath(GetSpellTexture(recipe.spellId))
+  end
   if iconPath and (not recipe.icon or recipe.icon == LEAF_FALLBACK) then
     recipe.icon = iconPath
   end
@@ -17743,7 +17779,9 @@ function LeafVE:EnsureWorkOrderCatalog()
                 name = ExtractWorkOrderRecipeName(row[3]),
                 itemId = itemId,
                 spellId = spellId,
-                icon = NormalizeIconPath(row[2]) or LEAF_FALLBACK,
+                icon = NormalizeIconPath(row[2])
+                  or NormalizeIconPath((spellId and GetSpellTexture and GetSpellTexture(spellId)) or nil)
+                  or LEAF_FALLBACK,
                 quality = ExtractWorkOrderQuality(row[3]),
                 sourceTable = tableKey,
               }
@@ -28667,7 +28705,8 @@ function LeafVE.UI:Build()
   
   EnsureDB()
   
-  local f = CreateFrame("Frame", nil, UIParent)
+  local f = (LEAFVE_UI_MODERN and LEAFVE_UI_MODERN.CreateMainFrame and LEAFVE_UI_MODERN:CreateMainFrame(UIParent))
+    or CreateFrame("Frame", nil, UIParent)
   self.frame = f
   f:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
   
@@ -28677,6 +28716,9 @@ function LeafVE.UI:Build()
   f:SetHeight(h)
   f:EnableMouse(false)
   f:SetMovable(true)
+  if f.SetClampedToScreen then
+    f:SetClampedToScreen(true)
+  end
 
   local function StopLeafFrameDrag()
     f:StopMovingOrSizing()
@@ -28700,6 +28742,9 @@ function LeafVE.UI:Build()
   self.dragHandle = dragHandle
   
   SkinFrameModern(f)
+  if LEAFVE_UI_MODERN and LEAFVE_UI_MODERN.ApplyModernFrame then
+    LEAFVE_UI_MODERN:ApplyModernFrame(f)
+  end
   MakeResizeHandle(f)
   
   f:SetScript("OnSizeChanged", function()
@@ -29147,17 +29192,25 @@ function LeafVE.UI:Refresh()
       self.panels[name]:Hide()
     end
   end
+  local function ShowPanelWithTransition(panel)
+    if not panel then return end
+    if LEAFVE_UI_MODERN and LEAFVE_UI_MODERN.AnimateTabTransition then
+      LEAFVE_UI_MODERN:AnimateTabTransition(panel)
+    else
+      panel:Show()
+    end
+  end
   
   if not hasAccess then
     if self.panels.join then
-      self.panels.join:Show()
+      ShowPanelWithTransition(self.panels.join)
     end
     return
   end
   
   -- Show active tab
   if self.activeTab == "me" and self.panels.me then
-    self.panels.me:Show()
+    ShowPanelWithTransition(self.panels.me)
     local me = ShortName(UnitName("player") or "")
     if not me or me == "" then return end
     
@@ -29372,7 +29425,13 @@ function LeafVE.UI:Refresh()
         if a.total == b.total then return Lower(a.name) < Lower(b.name) end
         return a.total > b.total
       end)
-      local rankLabels = {"|cFFFFD7001st|r", "|cFFC0C0C02nd|r", "|cFFCD7F323rd|r", "|cFFFFFFFF4th|r", "|cFFFFFFFF5th|r"}
+      local medals = LEAFVE_STYLE and LEAFVE_STYLE.medals or nil
+      local rankLabels = {
+        ((medals and medals[1]) and (medals[1] .. " ") or "") .. "|cFFFFD7001st|r",
+        ((medals and medals[2]) and (medals[2] .. " ") or "") .. "|cFFC0C0C02nd|r",
+        ((medals and medals[3]) and (medals[3] .. " ") or "") .. "|cFFCD7F323rd|r",
+        "|cFFFFFFFF4th|r", "|cFFFFFFFF5th|r"
+      }
       for i = 1, 5 do
         if self.panels.me.weekTopEntries[i] then
           if weekLeaders[i] then
@@ -29385,7 +29444,7 @@ function LeafVE.UI:Refresh()
     end
 
   elseif self.activeTab == "shoutouts" and self.panels.shoutouts then
-    self.panels.shoutouts:Show()
+    ShowPanelWithTransition(self.panels.shoutouts)
     local me = ShortName(UnitName("player"))
     if me then
       local today = DayKey()
@@ -29411,23 +29470,23 @@ function LeafVE.UI:Refresh()
     self:RefreshShoutoutsPanel()
     
   elseif self.activeTab == "leaderWeek" and self.panels.leaderWeek then
-    self.panels.leaderWeek:Show()
+    ShowPanelWithTransition(self.panels.leaderWeek)
     self:RefreshLeaderboard("leaderWeek")
     
   elseif self.activeTab == "leaderLife" and self.panels.leaderLife then
-    self.panels.leaderLife:Show()
+    ShowPanelWithTransition(self.panels.leaderLife)
     self:RefreshLeaderboard("leaderLife")
     
   elseif self.activeTab == "roster" and self.panels.roster then
-    self.panels.roster:Show()
+    ShowPanelWithTransition(self.panels.roster)
     self:RefreshRoster()
     
   elseif self.activeTab == "history" and self.panels.history then
-    self.panels.history:Show()
+    ShowPanelWithTransition(self.panels.history)
     self:RefreshHistory()
     
   elseif self.activeTab == "badges" and self.panels.badges then
-    self.panels.badges:Show()
+    ShowPanelWithTransition(self.panels.badges)
 
     LeafVE:ScheduleDeferred("badges_panel_refresh", 0, function()
       if LeafVE and LeafVE.UI and LeafVE.UI.activeTab == "badges"
@@ -29438,40 +29497,40 @@ function LeafVE.UI:Refresh()
     end)
     
   elseif self.activeTab == "achievements" and self.panels.achievements then
-    self.panels.achievements:Show()
+    ShowPanelWithTransition(self.panels.achievements)
     self:RefreshAchievementsLeaderboard()
 
   elseif self.activeTab == "options" and self.panels.options then
-    self.panels.options:Show()
+    ShowPanelWithTransition(self.panels.options)
     self:RefreshOptions()
 
   elseif self.activeTab == "admin" and self.panels.admin then
     if LeafVE:IsAdminRank() then
-      self.panels.admin:Show()
+      ShowPanelWithTransition(self.panels.admin)
     else
       -- Redirect non-admins back to "me" tab
       self.activeTab = "me"
-      if self.panels.me then self.panels.me:Show() end
+      if self.panels.me then ShowPanelWithTransition(self.panels.me) end
     end
 
   elseif self.activeTab == "liveHistory" and self.panels.liveHistory then
-    self.panels.liveHistory:Show()
+    ShowPanelWithTransition(self.panels.liveHistory)
     self:RefreshLiveHistory()
 
   elseif self.activeTab == "guildEvents" and self.panels.guildEvents then
-    self.panels.guildEvents:Show()
+    ShowPanelWithTransition(self.panels.guildEvents)
     if self.RefreshGuildEventsPanel then
       self:RefreshGuildEventsPanel()
     end
 
   elseif self.activeTab == "workOrderRep" and self.panels.workOrderRep then
-    self.panels.workOrderRep:Show()
+    ShowPanelWithTransition(self.panels.workOrderRep)
     if self.RefreshWorkOrderReputationPanel then
       self:RefreshWorkOrderReputationPanel()
     end
 
   elseif self.activeTab == "welcome" and self.panels.welcome then
-    self.panels.welcome:Show()
+    ShowPanelWithTransition(self.panels.welcome)
     self:RefreshWelcome()
   end
 end
@@ -29723,6 +29782,7 @@ LeafVE_eventFrame:RegisterEvent("CHAT_MSG_PARTY")
 LeafVE_eventFrame:RegisterEvent("CHAT_MSG_GUILD")
 LeafVE_eventFrame:RegisterEvent("CHAT_MSG_WHISPER")
 LeafVE_eventFrame:RegisterEvent("CHAT_MSG_COMBAT_HOSTILE_DEATH")
+LeafVE_eventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 LeafVE_eventFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
 LeafVE_eventFrame:RegisterEvent("BAG_UPDATE")
 LeafVE_eventFrame:RegisterEvent("PLAYER_MONEY")
@@ -29738,7 +29798,13 @@ LeafVE_updateTimers = {
   bankWatcher = 0,
 }
 
-LeafVE_eventFrame:SetScript("OnEvent", function()
+LeafVE_eventFrame:SetScript("OnEvent", function(_, eventName, ...)
+  local event = eventName or _G.event
+  local arg1, arg2, arg3, arg4 = ...
+  if arg1 == nil then arg1 = _G.arg1 end
+  if arg2 == nil then arg2 = _G.arg2 end
+  if arg3 == nil then arg3 = _G.arg3 end
+  if arg4 == nil then arg4 = _G.arg4 end
   if event == "ADDON_LOADED" and arg1 == LeafVE.name then
     EnsureDB()
     
@@ -29933,6 +29999,12 @@ LeafVE_eventFrame:SetScript("OnEvent", function()
     return
   end
 
+  if event == "COMBAT_LOG_EVENT_UNFILTERED" then
+    local timestamp, subEvent, sourceGUID, sourceName, sourceFlags, destGUID, destName, destFlags = ...
+    LeafVE:OnBossKillCombatLog(timestamp, subEvent, sourceGUID, sourceName, sourceFlags, destGUID, destName, destFlags)
+    return
+  end
+
   if event == "UNIT_INVENTORY_CHANGED" then
     if arg1 == "player" then
       LeafVE:ScheduleMyGearBroadcast(false)
@@ -29963,14 +30035,15 @@ LeafVE_eventFrame:SetScript("OnEvent", function()
 end)
 
 LeafVE_updateFrame = CreateFrame("Frame")
-LeafVE_updateFrame:SetScript("OnUpdate", function()
-  LeafVE_updateTimers.groupCheck = LeafVE_updateTimers.groupCheck + arg1
-  LeafVE_updateTimers.notification = LeafVE_updateTimers.notification + arg1
-  LeafVE_updateTimers.attendance = LeafVE_updateTimers.attendance + arg1
-  LeafVE_updateTimers.badgeSync = LeafVE_updateTimers.badgeSync + arg1
-  LeafVE_updateTimers.achievementLeaderboard = LeafVE_updateTimers.achievementLeaderboard + arg1
-  LeafVE_updateTimers.wipeMarkerPoll = LeafVE_updateTimers.wipeMarkerPoll + arg1
-  LeafVE_updateTimers.bankWatcher = LeafVE_updateTimers.bankWatcher + arg1
+LeafVE_updateFrame:SetScript("OnUpdate", function(_, elapsed)
+  elapsed = elapsed or _G.arg1 or 0
+  LeafVE_updateTimers.groupCheck = LeafVE_updateTimers.groupCheck + elapsed
+  LeafVE_updateTimers.notification = LeafVE_updateTimers.notification + elapsed
+  LeafVE_updateTimers.attendance = LeafVE_updateTimers.attendance + elapsed
+  LeafVE_updateTimers.badgeSync = LeafVE_updateTimers.badgeSync + elapsed
+  LeafVE_updateTimers.achievementLeaderboard = LeafVE_updateTimers.achievementLeaderboard + elapsed
+  LeafVE_updateTimers.wipeMarkerPoll = LeafVE_updateTimers.wipeMarkerPoll + elapsed
+  LeafVE_updateTimers.bankWatcher = LeafVE_updateTimers.bankWatcher + elapsed
 
   if LeafVE_updateTimers.groupCheck >= 30 then
     LeafVE_updateTimers.groupCheck = 0
