@@ -15,7 +15,7 @@ function LeafVE_UIModernization:CreateMainFrame(parent)
 end
 
 function LeafVE_UIModernization:ApplyModernFrame(frame)
-  if not frame or not frame.SetBackdrop then return end
+  if not frame then return end
   frame:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -64,7 +64,7 @@ function LeafVE_UIModernization:AnimateTabTransition(panel)
   end
   local elapsedTotal = 0
   panel._leafFadeDriver:SetScript("OnUpdate", function(_, elapsed)
-    elapsedTotal = elapsedTotal + (elapsed or _G.arg1 or 0)
+    elapsedTotal = elapsedTotal + (elapsed or 0)
     local alpha = elapsedTotal / 0.18
     if alpha >= 1 then
       panel:SetAlpha(1)

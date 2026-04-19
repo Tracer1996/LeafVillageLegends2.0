@@ -29425,11 +29425,14 @@ function LeafVE.UI:Refresh()
         if a.total == b.total then return Lower(a.name) < Lower(b.name) end
         return a.total > b.total
       end)
-      local medals = LEAFVE_STYLE and LEAFVE_STYLE.medals or nil
+      local medalProvider = LEAFVE_STYLE and LEAFVE_STYLE.GetMedalForRank
+      local medal1 = medalProvider and LEAFVE_STYLE:GetMedalForRank(1) or nil
+      local medal2 = medalProvider and LEAFVE_STYLE:GetMedalForRank(2) or nil
+      local medal3 = medalProvider and LEAFVE_STYLE:GetMedalForRank(3) or nil
       local rankLabels = {
-        ((medals and medals[1]) and (medals[1] .. " ") or "") .. "|cFFFFD7001st|r",
-        ((medals and medals[2]) and (medals[2] .. " ") or "") .. "|cFFC0C0C02nd|r",
-        ((medals and medals[3]) and (medals[3] .. " ") or "") .. "|cFFCD7F323rd|r",
+        (medal1 and (medal1 .. " ") or "") .. "|cFFFFD7001st|r",
+        (medal2 and (medal2 .. " ") or "") .. "|cFFC0C0C02nd|r",
+        (medal3 and (medal3 .. " ") or "") .. "|cFFCD7F323rd|r",
         "|cFFFFFFFF4th|r", "|cFFFFFFFF5th|r"
       }
       for i = 1, 5 do

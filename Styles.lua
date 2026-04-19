@@ -25,8 +25,13 @@ LeafVE_Styles.classColors = {
 }
 
 LeafVE_Styles.medals = { "🥇", "🥈", "🥉" }
+LeafVE_Styles.medalFallbacks = { "[1st]", "[2nd]", "[3rd]" }
+LeafVE_Styles.useUnicodeMedals = true
 
 function LeafVE_Styles:GetMedalForRank(rank)
   if not rank or rank < 1 or rank > 3 then return nil end
-  return self.medals and self.medals[rank] or nil
+  if self.useUnicodeMedals ~= false and self.medals and self.medals[rank] then
+    return self.medals[rank]
+  end
+  return self.medalFallbacks and self.medalFallbacks[rank] or nil
 end
