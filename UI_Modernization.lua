@@ -2,6 +2,7 @@ LeafVE_UIModernization = LeafVE_UIModernization or {}
 
 local STYLE = LeafVE_Styles or {}
 local COLORS = STYLE.colors or {}
+local TAB_FADE_DURATION = 0.18
 
 local function ColorOr(color, fallback)
   if type(color) == "table" then
@@ -65,7 +66,7 @@ function LeafVE_UIModernization:AnimateTabTransition(panel)
   local elapsedTotal = 0
   panel._leafFadeDriver:SetScript("OnUpdate", function(_, elapsed)
     elapsedTotal = elapsedTotal + (elapsed or 0)
-    local alpha = elapsedTotal / 0.18
+    local alpha = elapsedTotal / TAB_FADE_DURATION
     if alpha >= 1 then
       panel:SetAlpha(1)
       panel._leafFadeDriver:SetScript("OnUpdate", nil)
