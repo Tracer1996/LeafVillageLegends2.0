@@ -1,4 +1,4 @@
-## Interface: 11200
+## Interface: 30300
 ## Title: Leaf Alliance
 ## Notes: Lightweight alliance channel and guild roster sync
 ## Author: Codex

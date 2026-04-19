@@ -1,4 +1,4 @@
-## Interface: 11200
+## Interface: 30300
 ## Title: BetterCharacterStats 1.15.1
 ## Author: moh, Bennylava, |cffbe5effLexie|r, Spit, Pepopo
 ## Version: 1.15.1
