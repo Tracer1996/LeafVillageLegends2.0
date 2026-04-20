@@ -1,9 +1,12 @@
 LeafVE_Styles = LeafVE_Styles or {}
 
 local ColorDB = LeafVE_Colors or {}
+local Theme = LeafVE_Theme or {}
 local quality = ColorDB.QUALITY_COLORS or {}
-local bg = ColorDB.BG_COLORS or {}
-local text = ColorDB.TEXT_COLORS or {}
+local bg = Theme.BG or ColorDB.BG_COLORS or {}
+local text = Theme.TEXT or ColorDB.TEXT_COLORS or {}
+local border = Theme.BORDER or {}
+local accent = Theme.ACCENT or {}
 local classHex = ColorDB.CLASS_COLORS_HEX or {}
 local fontDB = LeafVE_Fonts and LeafVE_Fonts.FONTS or {}
 
@@ -24,11 +27,17 @@ LeafVE_Styles.colors = {
   rare = ToArray(quality.rare, 1),
   uncommon = ToArray(quality.uncommon, 1),
   epic = ToArray(quality.epic, 1),
-  bgDark = ToArray(bg.darkest, 0.96),
-  bgPanel = ToArray(bg.dark, 0.88),
-  border = ToArray(bg.light, 1),
-  soft = ToArray(bg.medium, 1),
-  white = ToArray(text.bright, 1),
+
+  bgBase = ToArray(bg.base or bg.darkest, 0.97),
+  bgDark = ToArray(bg.base or bg.darkest, 0.96),
+  bgPanel = ToArray(bg.panel or bg.dark, 0.88),
+  accent = ToArray(accent.primary or text.accent, 1),
+  gold = ToArray(accent.gold or text.gold, 1),
+  muted = ToArray(text.muted or text.muted_gray, 1),
+
+  border = ToArray(border.normal or bg.light, 1),
+  soft = ToArray(bg.elevated or bg.medium, 1),
+  white = ToArray(text.primary or text.bright, 1),
 }
 
 LeafVE_Styles.fonts = {

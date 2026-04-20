@@ -9,6 +9,7 @@
 
 LeafVillageLegends.lua
 Utils\Colors.lua
+UI\Theme.lua
 UI\Fonts.lua
 UI\FrameSkins.lua
 UI\Animations.lua
@@ -21,6 +22,8 @@ Core\Events.lua
 Utils\Helpers.lua
 Utils\Protocol.lua
 Utils\GearStats.lua
+UI\RosterUI.lua
+UI\PlayerCard.lua
 UI\UI_Main.lua
 Features\Leaderboard.lua
 Features\GearTracking.lua
