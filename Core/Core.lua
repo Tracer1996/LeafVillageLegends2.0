@@ -309,6 +309,12 @@ local CLASS_COLORS = (LEAFVE_STYLE and LEAFVE_STYLE.classColors) or {
   MAGE = {0.41, 0.80, 0.94}, WARLOCK = {0.58, 0.51, 0.79}, DRUID = {1.00, 0.49, 0.04},
 }
 
+local Colors = LeafVE_Colors or {}
+local FrameSkins = LeafVE_FrameSkins or {}
+local Fonts = LeafVE_Fonts or {}
+local BG_COLORS = Colors.BG_COLORS or Colors.PRIMARY or {}
+local TEXT_COLORS = Colors.TEXT_COLORS or Colors.TEXT or {}
+
 -- Faction-specific flat background colour for the live player model portrait.
 -- Each entry: {r, g, b}
 local FACTION_BACKGROUNDS = {
@@ -1246,14 +1252,18 @@ function WeekStartTSFromKey(wk)
 end
 
 local function SkinFrameModern(f)
-  f:SetBackdrop({
-    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true, tileSize = 16, edgeSize = 16,
-    insets = {left = 4, right = 4, top = 4, bottom = 4}
-  })
-  f:SetBackdropColor(THEME.bg[1], THEME.bg[2], THEME.bg[3], THEME.bg[4])
-  f:SetBackdropBorderColor(THEME.border[1], THEME.border[2], THEME.border[3], THEME.border[4])
+  if FrameSkins and FrameSkins.SkinWindow then
+    FrameSkins:SkinWindow(f)
+  else
+    f:SetBackdrop({
+      bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+      edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+      tile = true, tileSize = 16, edgeSize = 16,
+      insets = {left = 4, right = 4, top = 4, bottom = 4}
+    })
+    f:SetBackdropColor(THEME.bg[1], THEME.bg[2], THEME.bg[3], THEME.bg[4])
+    f:SetBackdropBorderColor(THEME.border[1], THEME.border[2], THEME.border[3], THEME.border[4])
+  end
   if not f._accentStripe then
     local stripe = f:CreateTexture(nil, "BORDER")
     stripe:SetPoint("TOPLEFT", f, "TOPLEFT", 10, -44)
@@ -1262,6 +1272,20 @@ local function SkinFrameModern(f)
     stripe:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background")
     stripe:SetVertexColor(THEME.leaf[1], THEME.leaf[2], THEME.leaf[3], 0.85)
     f._accentStripe = stripe
+  end
+end
+
+local function SkinPanelModern(frame, bgColor)
+  if not frame then return end
+  if FrameSkins and FrameSkins.SkinPanel then
+    FrameSkins:SkinPanel(frame, bgColor or BG_COLORS.dark)
+  end
+end
+
+local function SkinScrollControl(frame)
+  if not frame then return end
+  if FrameSkins and FrameSkins.SkinScrollArea then
+    FrameSkins:SkinScrollArea(frame)
   end
 end
 
@@ -1377,6 +1401,9 @@ local function SkinButtonAccent(btn)
       end
     end
   end)
+  if FrameSkins and FrameSkins.SkinButton then
+    FrameSkins:SkinButton(btn, "info")
+  end
 end
 
 local function SetLeafButtonTextColor(btn, normalR, normalG, normalB, hoverR, hoverG, hoverB)
@@ -11006,10 +11033,44 @@ local function TabButton(parent, text, name)
   b:SetHeight(20)
   b:SetText(text)
   SkinButtonAccent(b)
+  if FrameSkins and FrameSkins.SkinTab then
+    FrameSkins:SkinTab(b, false)
+  end
   if LEAFVE_UI_MODERN and LEAFVE_UI_MODERN.StyleButton then
     LEAFVE_UI_MODERN:StyleButton(b)
   end
   return b
+end
+
+function LeafVE.UI:RefreshMainTabStyles()
+  if not (FrameSkins and FrameSkins.SkinTab) then
+    return
+  end
+
+  local tabMap = {
+    {btn = self.tabWelcome, tab = "welcome"},
+    {btn = self.tabJoin, tab = "join"},
+    {btn = self.tabMe, tab = "me"},
+    {btn = self.tabLeaderWeek, tab = "leaderWeek"},
+    {btn = self.tabLeaderLife, tab = "leaderLife"},
+    {btn = self.tabRoster, tab = "roster"},
+    {btn = self.tabHistory, tab = "history"},
+    {btn = self.tabShoutouts, tab = "shoutouts"},
+    {btn = self.tabBadges, tab = "badges"},
+    {btn = self.tabAchievements, tab = "achievements"},
+    {btn = self.tabOptions, tab = "options"},
+    {btn = self.tabAdmin, tab = "admin"},
+    {btn = self.tabLiveHistory, tab = "liveHistory"},
+    {btn = self.tabGuildEvents, tab = "guildEvents"},
+    {btn = self.tabWorkOrderRep, tab = "workOrderRep"},
+  }
+
+  for i = 1, table.getn(tabMap) do
+    local entry = tabMap[i]
+    if entry.btn then
+      FrameSkins:SkinTab(entry.btn, self.activeTab == entry.tab)
+    end
+  end
 end
 
 function LeafVE.UI:LayoutLegacyMainTabs()
@@ -25412,6 +25473,7 @@ function BuildShoutoutsPanel(panel)
   shoutScrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -30, 12)
   shoutScrollFrame:EnableMouse(true)
   shoutScrollFrame:EnableMouseWheel(true)
+  SkinScrollControl(shoutScrollFrame)
 
   local shoutScrollChild = CreateFrame("Frame", nil, shoutScrollFrame)
   shoutScrollChild:SetWidth(430)
@@ -25439,6 +25501,9 @@ function BuildShoutoutsPanel(panel)
   local shoutThumb = shoutScrollBar:GetThumbTexture()
   shoutThumb:SetWidth(16)
   shoutThumb:SetHeight(24)
+  if shoutThumb and TEXT_COLORS.gold then
+    shoutThumb:SetVertexColor(TEXT_COLORS.gold.r or 1, TEXT_COLORS.gold.g or 0.84, TEXT_COLORS.gold.b or 0, 0.9)
+  end
 
   shoutScrollBar:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -25448,6 +25513,7 @@ function BuildShoutoutsPanel(panel)
   })
   shoutScrollBar:SetBackdropColor(0, 0, 0, 0.3)
   shoutScrollBar:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
+  SkinScrollControl(shoutScrollBar)
 
   shoutScrollBar:SetScript("OnValueChanged", function()
     local value = shoutScrollBar:GetValue()
@@ -25490,6 +25556,7 @@ function CreateScrollablePanel(panel, title, desc)
   scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -30, 12)
   scrollFrame:EnableMouse(true)
   scrollFrame:EnableMouseWheel(true)
+  SkinScrollControl(scrollFrame)
   
   local scrollChild = CreateFrame("Frame", nil, scrollFrame)
   scrollChild:SetWidth(500)
@@ -25517,6 +25584,9 @@ function CreateScrollablePanel(panel, title, desc)
   local thumb = scrollBar:GetThumbTexture()
   thumb:SetWidth(16)
   thumb:SetHeight(24)
+  if thumb and TEXT_COLORS.gold then
+    thumb:SetVertexColor(TEXT_COLORS.gold.r or 1, TEXT_COLORS.gold.g or 0.84, TEXT_COLORS.gold.b or 0, 0.9)
+  end
   
   scrollBar:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -25526,6 +25596,7 @@ function CreateScrollablePanel(panel, title, desc)
   })
   scrollBar:SetBackdropColor(0, 0, 0, 0.3)
   scrollBar:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
+  SkinScrollControl(scrollBar)
   
   scrollBar:SetScript("OnValueChanged", function()
     local value = scrollBar:GetValue()
@@ -25580,6 +25651,7 @@ function BuildLeaderboardPanel(panel, isWeekly)
   scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -30, 12)
   scrollFrame:EnableMouse(true)
   scrollFrame:EnableMouseWheel(true)
+  SkinScrollControl(scrollFrame)
   
   local scrollChild = CreateFrame("Frame", nil, scrollFrame)
   scrollChild:SetWidth(500)
@@ -25607,6 +25679,9 @@ function BuildLeaderboardPanel(panel, isWeekly)
   local thumb = scrollBar:GetThumbTexture()
   thumb:SetWidth(16)
   thumb:SetHeight(24)
+  if thumb and TEXT_COLORS.gold then
+    thumb:SetVertexColor(TEXT_COLORS.gold.r or 1, TEXT_COLORS.gold.g or 0.84, TEXT_COLORS.gold.b or 0, 0.9)
+  end
   
   scrollBar:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -25616,6 +25691,7 @@ function BuildLeaderboardPanel(panel, isWeekly)
   })
   scrollBar:SetBackdropColor(0, 0, 0, 0.3)
   scrollBar:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
+  SkinScrollControl(scrollBar)
   
   scrollBar:SetScript("OnValueChanged", function()
     local value = scrollBar:GetValue()
@@ -28684,12 +28760,25 @@ function LeafVE.UI:Build()
   local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   title:SetPoint("TOP", f, "TOP", 0, -12)  -- ← CENTERED
   title:SetText("|cFFFFD700Leaf Village Legends|r")  -- ← GOLD COLOR
+  if Fonts and Fonts.Apply then
+    Fonts:Apply(title, "h1", "OUTLINE")
+  end
+  if TEXT_COLORS.gold then
+    title:SetTextColor(TEXT_COLORS.gold.r or 1, TEXT_COLORS.gold.g or 0.84, TEXT_COLORS.gold.b or 0, 1)
+  end
   
   -- Subtitle description (centered below title)
   local sub = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   sub:SetPoint("TOP", title, "BOTTOM", 0, -2)
   sub:SetText("Auto-tracking: Login + Group Points")
-  sub:SetTextColor(0.7, 0.7, 0.7)
+  if Fonts and Fonts.Apply then
+    Fonts:Apply(sub, "body_small")
+  end
+  if TEXT_COLORS.off_white then
+    sub:SetTextColor(TEXT_COLORS.off_white.r or 0.92, TEXT_COLORS.off_white.g or 0.92, TEXT_COLORS.off_white.b or 0.94)
+  else
+    sub:SetTextColor(0.7, 0.7, 0.7)
+  end
   
   -- Emblem (left side, keep existing)
   local emblem = f:CreateTexture(nil, "ARTWORK")
@@ -28719,16 +28808,19 @@ function LeafVE.UI:Build()
     self.inset = CreateInset(f)
     self.inset:SetPoint("TOPLEFT", f, "TOPLEFT", 12, -80)
     self.inset:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -12, 12)
+    SkinPanelModern(self.inset, BG_COLORS.dark)
 
     self.left = CreateFrame("Frame", nil, self.inset)
     self.left:SetPoint("TOPLEFT", self.inset, "TOPLEFT", 0, 0)
     self.left:SetPoint("BOTTOMLEFT", self.inset, "BOTTOMLEFT", 0, 0)
     self.left:SetPoint("TOPRIGHT", self.inset, "TOPRIGHT", -470, 0)
     self.left:SetPoint("BOTTOMRIGHT", self.inset, "BOTTOMRIGHT", -470, 0)
+    SkinPanelModern(self.left, BG_COLORS.darkest)
 
     self.panels = {}
     self.panels.update = CreateFrame("Frame", nil, self.left)
     self.panels.update:SetAllPoints(self.left)
+    SkinPanelModern(self.panels.update, BG_COLORS.dark)
     BuildUpdatePanel(self.panels.update)
 
     tabUpdate:SetScript("OnClick", function()
@@ -28737,6 +28829,9 @@ function LeafVE.UI:Build()
     end)
 
     self.activeTab = "update"
+    if FrameSkins and FrameSkins.SkinTab then
+      FrameSkins:SkinTab(tabUpdate, true)
+    end
     self.panels.update:Show()
 
     if LeafVE_DB.ui.point and LeafVE_DB.ui.x and LeafVE_DB.ui.y then
@@ -28822,12 +28917,14 @@ function LeafVE.UI:Build()
   self.inset = CreateInset(f)
   self.inset:SetPoint("TOPLEFT", f, "TOPLEFT", 12, -106)
   self.inset:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -12, 12)
+  SkinPanelModern(self.inset, BG_COLORS.dark)
   
   self.left = CreateFrame("Frame", nil, self.inset)
   self.left:SetPoint("TOPLEFT", self.inset, "TOPLEFT", 0, 0)
   self.left:SetPoint("BOTTOMLEFT", self.inset, "BOTTOMLEFT", 0, 0)
   self.left:SetPoint("TOPRIGHT", self.inset, "TOPRIGHT", -470, 0)
   self.left:SetPoint("BOTTOMRIGHT", self.inset, "BOTTOMRIGHT", -470, 0)
+  SkinPanelModern(self.left, BG_COLORS.darkest)
   
   self:BuildPlayerCard(self.inset)
   
@@ -28900,6 +28997,10 @@ function LeafVE.UI:Build()
   self.panels.join = CreateFrame("Frame", nil, self.left)
   self.panels.join:SetAllPoints(self.left)
   BuildJoinPanel(self.panels.join)
+
+  for _, panelName in ipairs({"me", "shoutouts", "leaderWeek", "leaderLife", "roster", "history", "badges", "achievements", "options", "admin", "liveHistory", "guildEvents", "workOrderRep", "welcome", "join"}) do
+    SkinPanelModern(self.panels[panelName], BG_COLORS.dark)
+  end
   
   -- Tab click handlers
   self.tabMe:SetScript("OnClick", function()
@@ -28981,6 +29082,7 @@ function LeafVE.UI:Build()
   
   -- Initial state - hide all panels except "me"
   self.activeTab = "me"
+  self:RefreshMainTabStyles()
   
   self.panels.shoutouts:Hide()
   self.panels.leaderWeek:Hide()
@@ -29073,6 +29175,7 @@ function LeafVE.UI:Refresh()
     end
   end
   self:RefreshGroupedNavigation(hasAccess)
+  self:RefreshMainTabStyles()
 
   if self.card then
     if hasAccess and self.activeTab ~= "guildEvents" and self.activeTab ~= "workOrderRep" then
