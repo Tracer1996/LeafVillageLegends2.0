@@ -14,6 +14,25 @@ LeafVE.raidSignupsEnabled = false
 -- cannot corrupt the shared leaderboard / badge data.
 LeafVE.minCompatVersion = "14.3"
 
+local function LeafVESafeRequire(moduleName)
+  if type(require) ~= "function" then
+    return nil
+  end
+  local ok, loadedModule = pcall(require, moduleName)
+  if ok then
+    return loadedModule
+  end
+  return nil
+end
+
+local Colors = LeafVE.Colors or LeafVESafeRequire("Utils.Colors") or _G.LeafVE_Colors
+local FrameSkins = LeafVE.FrameSkins or LeafVESafeRequire("UI.FrameSkins") or _G.LeafVE_FrameSkins
+local Fonts = LeafVE.Fonts or LeafVESafeRequire("UI.Fonts") or _G.LeafVE_Fonts
+
+LeafVE.Colors = LeafVE.Colors or Colors
+LeafVE.FrameSkins = LeafVE.FrameSkins or FrameSkins
+LeafVE.Fonts = LeafVE.Fonts or Fonts
+
 -- Core constants are loaded from Core/Constants.lua to keep this chunk under
 -- WoW Lua's local-variable limit.
 LeafVE.allianceChat = {
@@ -303,11 +322,26 @@ local CLASS_CIRCLE_COORDS = {
   PALADIN = {0,    0.25, 0.5,  0.75},
 }
 
-local CLASS_COLORS = (LEAFVE_STYLE and LEAFVE_STYLE.classColors) or {
+local function NormalizeClassColorTable(classColors)
+  local normalized = {}
+  if type(classColors) ~= "table" then
+    return normalized
+  end
+  for classToken, classColor in pairs(classColors) do
+    if type(classColor) == "table" and classColor.r then
+      normalized[classToken] = {classColor.r, classColor.g or 1, classColor.b or 1}
+    else
+      normalized[classToken] = classColor
+    end
+  end
+  return normalized
+end
+
+local CLASS_COLORS = NormalizeClassColorTable((Colors and Colors.CLASS) or (LEAFVE_STYLE and LEAFVE_STYLE.classColors) or {
   WARRIOR = {0.78, 0.61, 0.43}, PALADIN = {0.96, 0.55, 0.73}, HUNTER = {0.67, 0.83, 0.45},
   ROGUE = {1.00, 0.96, 0.41}, PRIEST = {1.00, 1.00, 1.00}, SHAMAN = {0.14, 0.35, 1.00},
   MAGE = {0.41, 0.80, 0.94}, WARLOCK = {0.58, 0.51, 0.79}, DRUID = {1.00, 0.49, 0.04},
-}
+})
 
 -- Faction-specific flat background colour for the live player model portrait.
 -- Each entry: {r, g, b}
@@ -318,16 +352,40 @@ local FACTION_BACKGROUNDS = {
 
 local styleColors = (LEAFVE_STYLE and LEAFVE_STYLE.colors) or {}
 local THEME = {
-  bg = styleColors.bgDark or {0.05, 0.05, 0.06, 0.96},
-  insetBG = styleColors.bgPanel or {0.02, 0.02, 0.03, 0.88},
+  bg = styleColors.bgDark or {((Colors and Colors.PRIMARY and Colors.PRIMARY.darkest and Colors.PRIMARY.darkest.r) or 0.05), ((Colors and Colors.PRIMARY and Colors.PRIMARY.darkest and Colors.PRIMARY.darkest.g) or 0.05), ((Colors and Colors.PRIMARY and Colors.PRIMARY.darkest and Colors.PRIMARY.darkest.b) or 0.06), 0.96},
+  insetBG = styleColors.bgPanel or {((Colors and Colors.PRIMARY and Colors.PRIMARY.medium and Colors.PRIMARY.medium.r) or 0.02), ((Colors and Colors.PRIMARY and Colors.PRIMARY.medium and Colors.PRIMARY.medium.g) or 0.02), ((Colors and Colors.PRIMARY and Colors.PRIMARY.medium and Colors.PRIMARY.medium.b) or 0.03), 0.88},
   white = styleColors.white or {0.96, 0.96, 0.96, 1.00},
-  leaf = styleColors.uncommon or {0.20, 0.78, 0.35, 1.00},
+  leaf = styleColors.uncommon or {((Colors and Colors.PRIMARY and Colors.PRIMARY.accent and Colors.PRIMARY.accent.r) or 0.20), ((Colors and Colors.PRIMARY and Colors.PRIMARY.accent and Colors.PRIMARY.accent.g) or 0.78), ((Colors and Colors.PRIMARY and Colors.PRIMARY.accent and Colors.PRIMARY.accent.b) or 0.35), 1.00},
   leaf2 = styleColors.rare or {0.12, 0.55, 0.26, 1.00},
-  gold = {1.00, 0.82, 0.20, 1.00},
+  gold = {((Colors and Colors.TEXT and Colors.TEXT.gold and Colors.TEXT.gold.r) or 1.00), ((Colors and Colors.TEXT and Colors.TEXT.gold and Colors.TEXT.gold.g) or 0.82), ((Colors and Colors.TEXT and Colors.TEXT.gold and Colors.TEXT.gold.b) or 0.20), 1.00},
   epic = styleColors.epic or {0.64, 0.21, 0.93, 1.00},
-  border = styleColors.border or {0.28, 0.28, 0.30, 1.00},
-  soft = styleColors.soft or {0.18, 0.18, 0.20, 1.00},
+  border = styleColors.border or {((Colors and Colors.PRIMARY and Colors.PRIMARY.accent and Colors.PRIMARY.accent.r) or 0.28), ((Colors and Colors.PRIMARY and Colors.PRIMARY.accent and Colors.PRIMARY.accent.g) or 0.28), ((Colors and Colors.PRIMARY and Colors.PRIMARY.accent and Colors.PRIMARY.accent.b) or 0.30), 1.00},
+  soft = styleColors.soft or {((Colors and Colors.PRIMARY and Colors.PRIMARY.light and Colors.PRIMARY.light.r) or 0.18), ((Colors and Colors.PRIMARY and Colors.PRIMARY.light and Colors.PRIMARY.light.g) or 0.18), ((Colors and Colors.PRIMARY and Colors.PRIMARY.light and Colors.PRIMARY.light.b) or 0.20), 1.00},
 }
+
+local function LeafVECallSkin(methodName, ...)
+  if FrameSkins and type(FrameSkins[methodName]) == "function" then
+    local ok, result = pcall(FrameSkins[methodName], FrameSkins, ...)
+    if ok then
+      return result
+    end
+    return FrameSkins[methodName](...)
+  end
+  local skinFn = _G[methodName]
+  if type(skinFn) == "function" then
+    return skinFn(...)
+  end
+end
+
+local function LeafVEApplyFont(fontString, styleKey, flags)
+  if Fonts and type(Fonts.Apply) == "function" then
+    local ok = pcall(Fonts.Apply, Fonts, fontString, styleKey, flags)
+    if ok then
+      return true
+    end
+  end
+  return false
+end
 
 WORK_ORDER_PROFESSION_ORDER = {
   "Alchemy",
@@ -1246,6 +1304,10 @@ function WeekStartTSFromKey(wk)
 end
 
 local function SkinFrameModern(f)
+  if LeafVECallSkin("SkinWindow", f, nil) then
+    LeafVECallSkin("SkinBorder", f, (Colors and Colors.TEXT and Colors.TEXT.gold) or (Colors and Colors.PRIMARY and Colors.PRIMARY.accent) or nil, 2)
+    return
+  end
   f:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -1267,6 +1329,10 @@ end
 
 local function CreateInset(parent)
   local inset = CreateFrame("Frame", nil, parent)
+  if LeafVECallSkin("SkinPanel", inset, (Colors and Colors.PRIMARY and Colors.PRIMARY.medium) or nil, 12) then
+    LeafVECallSkin("SkinBorder", inset, (Colors and Colors.TEXT and Colors.TEXT.gold) or nil, 1)
+    return inset
+  end
   inset:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -1280,6 +1346,10 @@ end
 
 local function CreateGradientInset(parent)
   local inset = CreateFrame("Frame", nil, parent)
+  if LeafVECallSkin("SkinPanel", inset, (Colors and Colors.PRIMARY and Colors.PRIMARY.medium) or nil, 12) then
+    LeafVECallSkin("SkinBorder", inset, (Colors and Colors.TEXT and Colors.TEXT.gold) or nil, 1)
+    return inset
+  end
   inset:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -1357,6 +1427,7 @@ end
 
 local function SkinButtonAccent(btn)
   if not btn then return end
+  LeafVECallSkin("SkinButton", btn, "gear")
   btn:SetScript("OnEnter", function()
     local fs = btn.GetFontString and btn:GetFontString()
     if fs then
@@ -11005,11 +11076,27 @@ local function TabButton(parent, text, name)
   local b = CreateFrame("Button", name, parent, "UIPanelButtonTemplate")
   b:SetHeight(20)
   b:SetText(text)
+  LeafVECallSkin("SkinTab", b, false)
   SkinButtonAccent(b)
   if LEAFVE_UI_MODERN and LEAFVE_UI_MODERN.StyleButton then
     LEAFVE_UI_MODERN:StyleButton(b)
   end
   return b
+end
+
+local function UpdateLeafTabVisual(tabButton, isActive)
+  if not tabButton then
+    return
+  end
+  LeafVECallSkin("SkinTab", tabButton, isActive and true or false)
+  local fs = tabButton.GetFontString and tabButton:GetFontString()
+  if fs then
+    if isActive then
+      fs:SetTextColor((Colors and Colors.TEXT and Colors.TEXT.gold and Colors.TEXT.gold.r) or 1, (Colors and Colors.TEXT and Colors.TEXT.gold and Colors.TEXT.gold.g) or 0.84, (Colors and Colors.TEXT and Colors.TEXT.gold and Colors.TEXT.gold.b) or 0.0, 1)
+    else
+      fs:SetTextColor((Colors and Colors.TEXT and Colors.TEXT.off_white and Colors.TEXT.off_white.r) or 0.9, (Colors and Colors.TEXT and Colors.TEXT.off_white and Colors.TEXT.off_white.g) or 0.9, (Colors and Colors.TEXT and Colors.TEXT.off_white and Colors.TEXT.off_white.b) or 0.9, 1)
+    end
+  end
 end
 
 function LeafVE.UI:LayoutLegacyMainTabs()
@@ -11377,6 +11464,7 @@ function LeafVE.UI:RefreshGroupedNavigation(hasAccess)
       btn.text:SetText(categoryInfo.label)
       btn:SetWidth(categoryInfo.width or 76)
       UpdateWorkOrderModeButtonVisual(btn, categoryInfo.key == categoryKey)
+      UpdateLeafTabVisual(btn, categoryInfo.key == categoryKey)
     end
   end
 
@@ -11403,6 +11491,7 @@ function LeafVE.UI:RefreshGroupedNavigation(hasAccess)
       btn:SetWidth(subtab.width or 78)
       btn:Show()
       UpdateWorkOrderModeButtonVisual(btn, selectedSubtab == subtab.tab)
+      UpdateLeafTabVisual(btn, selectedSubtab == subtab.tab)
     elseif btn then
       btn.targetTab = nil
       btn.categoryKey = nil
@@ -18813,6 +18902,7 @@ end
 function UpdateWorkOrderModeButtonVisual(btn, selected)
   if not btn then return end
   btn.isSelected = selected and true or nil
+  LeafVECallSkin("SkinTab", btn, selected and true or false)
   if selected then
     btn:SetBackdropColor(THEME.leaf2[1], THEME.leaf2[2], THEME.leaf2[3], 0.92)
     btn:SetBackdropBorderColor(THEME.leaf[1], THEME.leaf[2], THEME.leaf[3], 1)
@@ -18842,7 +18932,10 @@ function CreateWorkOrderModeButton(parent, label)
   local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
   text:SetPoint("CENTER", btn, "CENTER", 0, 0)
   text:SetText(label or "")
+  LeafVEApplyFont(text, "button", "OUTLINE")
   btn.text = text
+
+  LeafVECallSkin("SkinButton", btn, "gear")
 
   btn:SetScript("OnEnter", function()
     if not this:IsEnabled() or this.isSelected then return end
@@ -28642,6 +28735,10 @@ function LeafVE.UI:Build()
   if LEAFVE_UI_MODERN and LEAFVE_UI_MODERN.ApplyModernFrame then
     LEAFVE_UI_MODERN:ApplyModernFrame(f)
   end
+  if Colors and Colors.PRIMARY and Colors.PRIMARY.darkest and f.SetBackdropColor then
+    f:SetBackdropColor(Colors.PRIMARY.darkest.r, Colors.PRIMARY.darkest.g, Colors.PRIMARY.darkest.b, 0.95)
+  end
+  LeafVECallSkin("SkinBorder", f, (Colors and Colors.TEXT and Colors.TEXT.gold) or nil, 2)
   MakeResizeHandle(f)
   
   f:SetScript("OnSizeChanged", function()
@@ -28683,13 +28780,19 @@ function LeafVE.UI:Build()
   -- Title (CENTERED, GOLD)
   local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   title:SetPoint("TOP", f, "TOP", 0, -12)  -- ← CENTERED
-  title:SetText("|cFFFFD700Leaf Village Legends|r")  -- ← GOLD COLOR
+  title:SetText("Leaf Village Legends")
+  if not LeafVEApplyFont(title, "header_large", "OUTLINE") then
+    title:SetTextColor(THEME.gold[1], THEME.gold[2], THEME.gold[3])
+  else
+    title:SetTextColor((Colors and Colors.TEXT and Colors.TEXT.gold and Colors.TEXT.gold.r) or THEME.gold[1], (Colors and Colors.TEXT and Colors.TEXT.gold and Colors.TEXT.gold.g) or THEME.gold[2], (Colors and Colors.TEXT and Colors.TEXT.gold and Colors.TEXT.gold.b) or THEME.gold[3], 1)
+  end
   
   -- Subtitle description (centered below title)
   local sub = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   sub:SetPoint("TOP", title, "BOTTOM", 0, -2)
   sub:SetText("Auto-tracking: Login + Group Points")
-  sub:SetTextColor(0.7, 0.7, 0.7)
+  LeafVEApplyFont(sub, "body_small")
+  sub:SetTextColor((Colors and Colors.TEXT and Colors.TEXT.muted_gray and Colors.TEXT.muted_gray.r) or 0.7, (Colors and Colors.TEXT and Colors.TEXT.muted_gray and Colors.TEXT.muted_gray.g) or 0.7, (Colors and Colors.TEXT and Colors.TEXT.muted_gray and Colors.TEXT.muted_gray.b) or 0.7)
   
   -- Emblem (left side, keep existing)
   local emblem = f:CreateTexture(nil, "ARTWORK")
@@ -28729,6 +28832,8 @@ function LeafVE.UI:Build()
     self.panels = {}
     self.panels.update = CreateFrame("Frame", nil, self.left)
     self.panels.update:SetAllPoints(self.left)
+    LeafVECallSkin("SkinPanel", self.panels.update, (Colors and Colors.PRIMARY and Colors.PRIMARY.medium) or nil, 12)
+    LeafVECallSkin("SkinBorder", self.panels.update, (Colors and Colors.TEXT and Colors.TEXT.gold) or nil, 1)
     BuildUpdatePanel(self.panels.update)
 
     tabUpdate:SetScript("OnClick", function()
@@ -28830,56 +28935,75 @@ function LeafVE.UI:Build()
   self.left:SetPoint("BOTTOMRIGHT", self.inset, "BOTTOMRIGHT", -470, 0)
   
   self:BuildPlayerCard(self.inset)
+  local function SkinPrimaryPanel(panelFrame)
+    if not panelFrame then
+      return
+    end
+    LeafVECallSkin("SkinPanel", panelFrame, (Colors and Colors.PRIMARY and Colors.PRIMARY.medium) or nil, 12)
+    LeafVECallSkin("SkinBorder", panelFrame, (Colors and Colors.TEXT and Colors.TEXT.gold) or nil, 1)
+  end
   
   -- Create all panels
   self.panels = {}
   
   self.panels.me = CreateFrame("Frame", nil, self.left)
   self.panels.me:SetAllPoints(self.left)
+  SkinPrimaryPanel(self.panels.me)
   BuildMyPanel(self.panels.me)
   
   self.panels.shoutouts = CreateFrame("Frame", nil, self.left)
   self.panels.shoutouts:SetAllPoints(self.left)
+  SkinPrimaryPanel(self.panels.shoutouts)
   BuildShoutoutsPanel(self.panels.shoutouts)
   
   self.panels.leaderWeek = CreateFrame("Frame", nil, self.left)
   self.panels.leaderWeek:SetAllPoints(self.left)
+  SkinPrimaryPanel(self.panels.leaderWeek)
   BuildLeaderboardPanel(self.panels.leaderWeek, true)
   
   self.panels.leaderLife = CreateFrame("Frame", nil, self.left)
   self.panels.leaderLife:SetAllPoints(self.left)
+  SkinPrimaryPanel(self.panels.leaderLife)
   BuildLeaderboardPanel(self.panels.leaderLife, false)
   
   self.panels.roster = CreateFrame("Frame", nil, self.left)
   self.panels.roster:SetAllPoints(self.left)
+  SkinPrimaryPanel(self.panels.roster)
   BuildRosterPanel(self.panels.roster)
   
   self.panels.history = CreateFrame("Frame", nil, self.left)
   self.panels.history:SetAllPoints(self.left)
+  SkinPrimaryPanel(self.panels.history)
   BuildHistoryPanel(self.panels.history)
   
   self.panels.badges = CreateFrame("Frame", nil, self.left)
   self.panels.badges:SetAllPoints(self.left)
+  SkinPrimaryPanel(self.panels.badges)
   BuildBadgesPanel(self.panels.badges)
   
   self.panels.achievements = CreateFrame("Frame", nil, self.left)
   self.panels.achievements:SetAllPoints(self.left)
+  SkinPrimaryPanel(self.panels.achievements)
   BuildAchievementsPanel(self.panels.achievements)
 
   self.panels.options = CreateFrame("Frame", nil, self.left)
   self.panels.options:SetAllPoints(self.left)
+  SkinPrimaryPanel(self.panels.options)
   BuildOptionsPanel(self.panels.options)
 
   self.panels.admin = CreateFrame("Frame", nil, self.left)
   self.panels.admin:SetAllPoints(self.left)
+  SkinPrimaryPanel(self.panels.admin)
   BuildAdminPanel(self.panels.admin)
 
   self.panels.liveHistory = CreateFrame("Frame", nil, self.left)
   self.panels.liveHistory:SetAllPoints(self.left)
+  SkinPrimaryPanel(self.panels.liveHistory)
   BuildLiveHistoryPanel(self.panels.liveHistory)
 
   self.panels.guildEvents = CreateFrame("Frame", nil, self.inset)
   self.panels.guildEvents:SetAllPoints(self.inset)
+  SkinPrimaryPanel(self.panels.guildEvents)
   if BuildGuildEventsPanel then
     BuildGuildEventsPanel(self.panels.guildEvents)
   else
@@ -28891,14 +29015,17 @@ function LeafVE.UI:Build()
 
   self.panels.workOrderRep = CreateFrame("Frame", nil, self.inset)
   self.panels.workOrderRep:SetAllPoints(self.inset)
+  SkinPrimaryPanel(self.panels.workOrderRep)
   BuildWorkOrderReputationPanel(self.panels.workOrderRep)
 
   self.panels.welcome = CreateFrame("Frame", nil, self.left)
   self.panels.welcome:SetAllPoints(self.left)
+  SkinPrimaryPanel(self.panels.welcome)
   BuildWelcomePanel(self.panels.welcome)
 
   self.panels.join = CreateFrame("Frame", nil, self.left)
   self.panels.join:SetAllPoints(self.left)
+  SkinPrimaryPanel(self.panels.join)
   BuildJoinPanel(self.panels.join)
   
   -- Tab click handlers
@@ -29071,7 +29198,29 @@ function LeafVE.UI:Refresh()
     else
       self.tabJoin:Show()
     end
+    UpdateLeafTabVisual(self.tabJoin, not hasAccess and self.activeTab == "join")
   end
+  for _, tab in ipairs(accessTabs) do
+    if tab then
+      local isActive = false
+      if tab == self.tabWelcome then isActive = (self.activeTab == "welcome")
+      elseif tab == self.tabMe then isActive = (self.activeTab == "me")
+      elseif tab == self.tabRoster then isActive = (self.activeTab == "roster")
+      elseif tab == self.tabLeaderWeek then isActive = (self.activeTab == "leaderWeek")
+      elseif tab == self.tabLeaderLife then isActive = (self.activeTab == "leaderLife")
+      elseif tab == self.tabAchievements then isActive = (self.activeTab == "achievements")
+      elseif tab == self.tabBadges then isActive = (self.activeTab == "badges")
+      elseif tab == self.tabShoutouts then isActive = (self.activeTab == "shoutouts")
+      elseif tab == self.tabHistory then isActive = (self.activeTab == "history")
+      elseif tab == self.tabLiveHistory then isActive = (self.activeTab == "liveHistory")
+      elseif tab == self.tabGuildEvents then isActive = (self.activeTab == "guildEvents")
+      elseif tab == self.tabWorkOrderRep then isActive = (self.activeTab == "workOrderRep")
+      elseif tab == self.tabOptions then isActive = (self.activeTab == "options")
+      end
+      UpdateLeafTabVisual(tab, isActive)
+    end
+  end
+  UpdateLeafTabVisual(self.tabAdmin, self.activeTab == "admin" and self.tabAdmin and self.tabAdmin:IsShown())
   self:RefreshGroupedNavigation(hasAccess)
 
   if self.card then
