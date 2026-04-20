@@ -151,17 +151,8 @@ LeafVE.weeklyRecapRankMessageTemplates = {
   },
 }
 
--- Guild ranks that can access the Admin tab
-local ADMIN_RANKS = { anbu = true, sannin = true, hokage = true }
-local ACCESS_RANKS = {
-  hokage = true,
-  sannin = true,
-  anbu = true,
-  jonin = true,
-  chunin = true,
-  genin = true,
-  ["academy student"] = true,
-}
+local ADMIN_RANKS = {}
+local ACCESS_RANKS = {}
 
 local LEAF_EMBLEM = "Interface\\Icons\\Spell_Nature_ResistNature"
 local LEAF_FALLBACK = "Interface\\Icons\\Spell_Nature_ResistNature"
@@ -1199,8 +1190,8 @@ end
 local function FormatCompactCountdownText(secondsRemaining)
   secondsRemaining = math.max(0, tonumber(secondsRemaining) or 0)
   local days = math.floor(secondsRemaining / SECONDS_PER_DAY)
-  local hours = math.floor(math.mod(secondsRemaining, SECONDS_PER_DAY) / SECONDS_PER_HOUR)
-  local minutes = math.floor(math.mod(secondsRemaining, SECONDS_PER_HOUR) / 60)
+  local hours = math.floor((secondsRemaining % SECONDS_PER_DAY) / SECONDS_PER_HOUR)
+  local minutes = math.floor((secondsRemaining % SECONDS_PER_HOUR) / 60)
   return string.format("%dd %dh %dm", days, hours, minutes)
 end
 
@@ -3591,15 +3582,7 @@ end
 
 -- Returns true if the current player holds an admin guild rank (Anbu, Sannin, or Hokage).
 function LeafVE:IsAdminRank()
-  local me = ShortName(UnitName("player"))
-  if not me then return false end
-  self:UpdateGuildRosterCache()
-  local info = self.guildRosterCache[Lower(me)]
-  if info and info.rank then
-    local lrank = Lower(Trim(info.rank))
-    return ADMIN_RANKS[lrank] == true
-  end
-  return false
+  return true
 end
 
 function LeafVE:GetConfiguredGroupInterval()
@@ -3840,15 +3823,7 @@ end
 
 -- Returns true if the current player holds an approved Leaf Village rank.
 function LeafVE:HasLeafAccess()
-  local me = ShortName(UnitName("player"))
-  if not me then return false end
-  self:UpdateGuildRosterCache()
-  local info = self.guildRosterCache[Lower(me)]
-  if info and info.rank then
-    local lrank = Lower(Trim(info.rank))
-    return ACCESS_RANKS[lrank] == true
-  end
-  return false
+  return true
 end
 
 -- Returns true if `name` appears in the in-memory roster cache or the
@@ -5748,8 +5723,8 @@ function FormatGuildBankMoney(copper)
   copper = tonumber(copper) or 0
   if copper < 0 then copper = 0 end
   local gold = math.floor(copper / 10000)
-  local silver = math.floor(math.mod(copper, 10000) / 100)
-  local bronze = math.mod(copper, 100)
+  local silver = math.floor((copper % 10000) / 100)
+  local bronze = copper % 100
   return tostring(gold) .. "g " .. tostring(silver) .. "s " .. tostring(bronze) .. "c"
 end
 
@@ -6699,13 +6674,7 @@ function LeafVE:GetGuildBankHighValueSignature()
 end
 
 function LeafVE:IsHighValueGuildBankRequester(playerName)
-  playerName = ShortName(playerName or UnitName("player"))
-  if not playerName then return false end
-
-  self:UpdateGuildRosterCache()
-  local info = self.guildRosterCache and self.guildRosterCache[Lower(playerName)] or nil
-  local rank = info and info.rank and Lower(Trim(info.rank)) or ""
-  return rank == "jonin" or rank == "anbu" or rank == "sannin" or rank == "hokage"
+  return true
 end
 
 function LeafVE:IsGuildBankItemHighValue(itemId)
@@ -7314,21 +7283,11 @@ function LeafVE:GetRaidSignupsDB()
 end
 
 function LeafVE:IsRaidOrganizerRank(playerName)
-  playerName = ShortName(playerName or UnitName("player"))
-  if not playerName then return false end
-  self:UpdateGuildRosterCache()
-  local info = self.guildRosterCache and self.guildRosterCache[Lower(playerName)] or nil
-  local rank = info and info.rank and Lower(Trim(info.rank)) or ""
-  return rank == "jonin" or rank == "anbu" or rank == "sannin" or rank == "hokage"
+  return true
 end
 
 function LeafVE:IsRaidEventCreatorRank(playerName)
-  playerName = ShortName(playerName or UnitName("player"))
-  if not playerName then return false end
-  self:UpdateGuildRosterCache()
-  local info = self.guildRosterCache and self.guildRosterCache[Lower(playerName)] or nil
-  local rank = info and info.rank and Lower(Trim(info.rank)) or ""
-  return ADMIN_RANKS[rank] == true
+  return true
 end
 
 function LeafVE:CanManageRaidEvent(eventRecord, playerName)
@@ -10525,9 +10484,9 @@ function GetWeeklyRecapMessageVariantIndex(seedText, variantCount)
   local hash = 0
   local seed = tostring(seedText or "")
   for i = 1, string.len(seed) do
-    hash = math.mod((hash * 31) + string.byte(seed, i), 2147483647)
+    hash = ((hash * 31) + string.byte(seed, i)) % 2147483647
   end
-  return math.mod(hash, count) + 1
+  return (hash % count) + 1
 end
 
 function LeafVE:BuildWeeklyRecapPersonalMessage(entry, weekKey)
@@ -12489,7 +12448,7 @@ function LeafVE.UI:UpdateCardRecentBadges(playerName)
     
     -- Position: grid layout (3 per row)
     local row = math.floor((i - 1) / perRow)
-    local col = math.mod(i - 1, perRow)
+    local col = (i - 1) % perRow
     
     frame:ClearAllPoints()
     frame:SetPoint("TOPLEFT", self.cardRecentBadgesFrame, "TOPLEFT", col * xSpacing, -row * ySpacing)
@@ -14625,8 +14584,8 @@ end
 function SplitWorkOrderTipCopper(tipCopper)
   tipCopper = ClampWorkOrderTipCopper(tipCopper)
   local gold = math.floor(tipCopper / 10000)
-  local silver = math.floor(math.mod(tipCopper, 10000) / 100)
-  local copper = math.mod(tipCopper, 100)
+  local silver = math.floor((tipCopper % 10000) / 100)
+  local copper = tipCopper % 100
   return gold, silver, copper
 end
 
@@ -17159,8 +17118,8 @@ function FormatWorkOrderRemainingTime(expiresAt, now)
 
   local remaining = expiresAt - now
   local days = math.floor(remaining / SECONDS_PER_DAY)
-  local hours = math.floor(math.mod(remaining, SECONDS_PER_DAY) / SECONDS_PER_HOUR)
-  local mins = math.floor(math.mod(remaining, SECONDS_PER_HOUR) / 60)
+  local hours = math.floor((remaining % SECONDS_PER_DAY) / SECONDS_PER_HOUR)
+  local mins = math.floor((remaining % SECONDS_PER_HOUR) / 60)
   if days > 0 then
     return tostring(days) .. "d " .. tostring(hours) .. "h"
   end
@@ -19856,7 +19815,7 @@ function LeafVE.UI:CreateProfessionPopup()
   for i = 1, table.getn(WORK_ORDER_MAIN_PROFESSION_ORDER) do
     local profession = WORK_ORDER_MAIN_PROFESSION_ORDER[i]
     local btn = CreateProfessionSelectionButton(mainPanel, profession)
-    local column = math.mod(i - 1, 2)
+    local column = (i - 1) % 2
     local row = math.floor((i - 1) / 2)
     btn:SetPoint("TOPLEFT", mainPanel, "TOPLEFT", 10 + (column * 156), -38 - (row * 26))
     btn.popup = popup
@@ -19907,7 +19866,7 @@ function LeafVE.UI:CreateProfessionPopup()
     local profession = WORK_ORDER_SECONDARY_PROFESSION_ORDER[i]
     local btn = CreateProfessionSelectionButton(secondaryPanel, profession)
     btn:SetWidth(146)
-    local column = math.mod(i - 1, 2)
+    local column = (i - 1) % 2
     local row = math.floor((i - 1) / 2)
     btn:SetPoint("TOPLEFT", secondaryPanel, "TOPLEFT", 10 + (column * 156), -34 - (row * 26))
     btn.popup = popup
@@ -28205,7 +28164,7 @@ function LeafVE.UI:RefreshShoutoutsPanel()
       frame.dateText:SetText(date("%m/%d", shout.timestamp))
       frame.msgText:SetText("|cFFFFD700" .. shout.target .. "|r - " .. shout.reason)
 
-      if math.mod(i, 2) == 0 then
+      if (i % 2) == 0 then
         frame.bg:SetVertexColor(0.08, 0.08, 0.08, 0.4)
       else
         frame.bg:SetVertexColor(0.12, 0.12, 0.12, 0.3)
@@ -32897,7 +32856,7 @@ function BuildGuildEventsPanel(panel)
     cell:SetBackdropBorderColor(0.22, 0.22, 0.28, 0.8)
     if i == 1 then
       cell:SetPoint("TOPLEFT", panel.calendarFrame, "TOPLEFT", 0, 0)
-    elseif math.mod(i - 1, 7) == 0 then
+    elseif ((i - 1) % 7) == 0 then
       cell:SetPoint("TOPLEFT", panel.calendarCells[i - 7], "BOTTOMLEFT", 0, -2)
     else
       cell:SetPoint("LEFT", panel.calendarCells[i - 1], "RIGHT", 2, 0)

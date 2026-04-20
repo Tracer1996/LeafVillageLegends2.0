@@ -129,28 +129,28 @@ The main window provides tabbed navigation:
 | **History** | Point earning history log |
 | **Live History** | Real-time point history feed for all members |
 | **Options** | Notification and display settings |
-| **Admin** | Officer/leadership tools (rank-restricted) |
+| **Admin** | Guild management tools (available to all guild members) |
 
 ### Minimap Button
 A minimap icon provides quick access to toggle the UI.
 
 ---
 
-## 🏰 Guild Rank Hierarchy
+## 🏰 Guild Rank Names
 
-Leaf Village Legends uses a Naruto-themed rank system for access control:
+Leaf Village Legends tracks Naruto-themed guild rank names for roster display and flavor:
 
-| Rank | Access Level |
-|------|-------------|
-| **Hokage** | Full admin access |
-| **Sannin** | Full admin access |
-| **Anbu** | Full admin access |
-| **Jonin** | Standard member access |
-| **Chunin** | Standard member access |
-| **Genin** | Standard member access |
-| **Academy Student** | Standard member access |
+| Rank |
+|------|
+| **Hokage** |
+| **Sannin** |
+| **Anbu** |
+| **Jonin** |
+| **Chunin** |
+| **Genin** |
+| **Academy Student** |
 
-Only **Hokage**, **Sannin**, and **Anbu** ranks can access the Admin panel.
+All addon features are available to all guild members regardless of rank.
 
 ---
 
