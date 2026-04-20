@@ -63,7 +63,7 @@ function COLORS:HexToRGB(hex)
 end
 
 function COLORS:GetClassColor(classToken)
-  local token = classToken and string.upper(classToken or "") or ""
+  local token = classToken and string.upper(classToken) or ""
   local hex = self.CLASS_COLORS_HEX[token]
   if not hex then
     return self.TEXT_COLORS.normal

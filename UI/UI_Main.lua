@@ -10,10 +10,6 @@ end
 
 function LeafVE_ApplyMainWindowSkin(frame, titleText)
   if LeafVE and LeafVE.UI and LeafVE.UI.ApplyMainWindowSkin then
-    LeafVE.UI:ApplyMainWindowSkin(frame, titleText)
-    return
-  end
-  if LeafVE_FrameSkins and LeafVE_FrameSkins.SkinWindow then
-    LeafVE_FrameSkins:SkinWindow(frame, titleText)
+    return LeafVE.UI:ApplyMainWindowSkin(frame, titleText)
   end
 end

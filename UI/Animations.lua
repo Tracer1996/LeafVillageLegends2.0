@@ -55,7 +55,12 @@ end
 
 function LeafVE_Animations:GlowPulse(frame, color, duration)
   if not frame then return end
-  local glow = AddGlowEffect and AddGlowEffect(frame, color, 0.1)
+  local glow
+  if LeafVE_FrameSkins and LeafVE_FrameSkins.AddGlowEffect then
+    glow = LeafVE_FrameSkins:AddGlowEffect(frame, color, 0.1)
+  elseif AddGlowEffect then
+    glow = AddGlowEffect(frame, color, 0.1)
+  end
   if not glow or not frame.CreateAnimationGroup then return end
   local group = frame:CreateAnimationGroup()
   group:SetLooping("BOUNCE")

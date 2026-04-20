@@ -43,20 +43,40 @@ local function ColorFromHex(hex, fallback)
   return c.r or 1, c.g or 1, c.b or 1
 end
 
+local function ApplyBorder(frame, color, thickness)
+  if LeafVE_FrameSkins and LeafVE_FrameSkins.SkinBorder then
+    return LeafVE_FrameSkins:SkinBorder(frame, color, thickness)
+  end
+  if SkinBorder then
+    return SkinBorder(frame, color, thickness)
+  end
+  return nil
+end
+
+local function ApplyProgress(frame, color, maxValue)
+  if LeafVE_FrameSkins and LeafVE_FrameSkins.SkinProgressBar then
+    return LeafVE_FrameSkins:SkinProgressBar(frame, color, maxValue)
+  end
+  if SkinProgressBar then
+    return SkinProgressBar(frame, color, maxValue)
+  end
+  return nil
+end
+
 local function BuildIconFrame(size)
   local f = CreateFrame("Frame", nil, UIParent)
   f:SetWidth(size or 18)
   f:SetHeight(size or 18)
   f.icon = f:CreateTexture(nil, "ARTWORK")
   f.icon:SetAllPoints(f)
-  SkinBorder(f, QUALITY_COLORS.common, 10)
+  ApplyBorder(f, QUALITY_COLORS.common, 10)
   return f
 end
 
 function LeafVE_IconSystem:CreateQualityBorderedIcon(texture, quality, size)
   local frame = BuildIconFrame(size or 18)
   frame.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
-  SkinBorder(frame, QUALITY_COLORS[string.lower(quality or "common")] or QUALITY_COLORS.common, 10)
+  ApplyBorder(frame, QUALITY_COLORS[string.lower(quality or "common")] or QUALITY_COLORS.common, 10)
   return frame
 end
 
@@ -68,7 +88,7 @@ function LeafVE_IconSystem:CreateClassIcon(class, size)
     frame.icon:SetTexCoord(CLASS_COORDS[token][1], CLASS_COORDS[token][2], CLASS_COORDS[token][3], CLASS_COORDS[token][4])
   end
   local r, g, b = ColorFromHex(CLASS_COLORS[token], QUALITY_COLORS.rare)
-  SkinBorder(frame, {r = r, g = g, b = b}, 10)
+  ApplyBorder(frame, {r = r, g = g, b = b}, 10)
   return frame
 end
 
@@ -80,7 +100,7 @@ function LeafVE_IconSystem:CreateBadgeIcon(badgeId, size, progress)
     frame.progress:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 0, -2)
     frame.progress:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", 0, -2)
     frame.progress:SetHeight(4)
-    SkinProgressBar(frame.progress, STATUS_COLORS.info, 100)
+    ApplyProgress(frame.progress, STATUS_COLORS.info, 100)
     frame.progress:SetValue(math.max(0, math.min(100, progress)))
   end
   return frame
@@ -106,7 +126,7 @@ function LeafVE_IconSystem:CreateStatusIcon(status, size)
   frame.icon:SetTexture("Interface\\Buttons\\WHITE8x8")
   local color = STATUS_COLORS[string.lower(tostring(status or ""))] or STATUS_COLORS.info
   frame.icon:SetVertexColor(color.r or 1, color.g or 1, color.b or 1, 1)
-  SkinBorder(frame, color, 10)
+  ApplyBorder(frame, color, 10)
   return frame
 end
 
