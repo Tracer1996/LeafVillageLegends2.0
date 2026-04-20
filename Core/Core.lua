@@ -329,6 +329,24 @@ local THEME = {
   soft = styleColors.soft or {0.18, 0.18, 0.20, 1.00},
 }
 
+local Colors = LeafVE_Colors or {}
+local FrameSkins = LeafVE_FrameSkins
+local Fonts = LeafVE_Fonts
+
+local function ColorTriplet(color, fallback)
+  local source = color or fallback or {r = 1, g = 1, b = 1}
+  if source.r then
+    return source.r or 1, source.g or 1, source.b or 1
+  end
+  return source[1] or 1, source[2] or 1, source[3] or 1
+end
+
+local function SetTextColorFromPalette(fontString, color, fallback)
+  if not fontString or not fontString.SetTextColor then return end
+  local r, g, b = ColorTriplet(color, fallback)
+  fontString:SetTextColor(r, g, b)
+end
+
 WORK_ORDER_PROFESSION_ORDER = {
   "Alchemy",
   "Blacksmithing",
@@ -1246,6 +1264,14 @@ function WeekStartTSFromKey(wk)
 end
 
 local function SkinFrameModern(f)
+  if FrameSkins and FrameSkins.SkinWindow then
+    FrameSkins:SkinWindow(f)
+    local darkest = Colors.PRIMARY and Colors.PRIMARY.darkest
+    if darkest and f.SetBackdropColor then
+      f:SetBackdropColor(darkest.r, darkest.g, darkest.b, 0.95)
+    end
+    return
+  end
   f:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -1267,6 +1293,10 @@ end
 
 local function CreateInset(parent)
   local inset = CreateFrame("Frame", nil, parent)
+  if FrameSkins and FrameSkins.SkinPanel then
+    FrameSkins:SkinPanel(inset, Colors.PRIMARY and Colors.PRIMARY.medium)
+    return inset
+  end
   inset:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -1280,6 +1310,10 @@ end
 
 local function CreateGradientInset(parent)
   local inset = CreateFrame("Frame", nil, parent)
+  if FrameSkins and FrameSkins.SkinPanel then
+    FrameSkins:SkinPanel(inset, Colors.PRIMARY and Colors.PRIMARY.dark)
+    return inset
+  end
   inset:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -1294,6 +1328,30 @@ local function CreateGradientInset(parent)
   gradient:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background")
   gradient:SetGradientAlpha("VERTICAL", 0.2, 0.2, 0.22, 1, 0.08, 0.08, 0.1, 1)
   return inset
+end
+
+local function SkinPanelFrame(frame, bgColor)
+  if not frame then return end
+  if FrameSkins and FrameSkins.SkinPanel then
+    FrameSkins:SkinPanel(frame, bgColor or (Colors.PRIMARY and Colors.PRIMARY.medium))
+  end
+end
+
+local function SkinScrollComponents(scrollFrame, scrollBar)
+  if FrameSkins and FrameSkins.SkinScrollArea and scrollFrame then
+    FrameSkins:SkinScrollArea(scrollFrame)
+  end
+  if scrollBar and scrollBar.SetBackdrop then
+    local dark = Colors.PRIMARY and Colors.PRIMARY.darkest
+    local accent = Colors.TEXT and Colors.TEXT.gold
+    scrollBar:SetBackdropColor((dark and dark.r) or 0.05, (dark and dark.g) or 0.08, (dark and dark.b) or 0.18, 0.78)
+    scrollBar:SetBackdropBorderColor((accent and accent.r) or 1.0, (accent and accent.g) or 0.84, (accent and accent.b) or 0, 0.75)
+  end
+  if scrollBar and scrollBar.GetThumbTexture and scrollBar:GetThumbTexture() then
+    local thumb = scrollBar:GetThumbTexture()
+    local accent = Colors.TEXT and Colors.TEXT.gold
+    thumb:SetVertexColor((accent and accent.r) or 1.0, (accent and accent.g) or 0.84, (accent and accent.b) or 0, 0.95)
+  end
 end
 
 LeafVE.uiMinWidth = 950
@@ -1357,13 +1415,22 @@ end
 
 local function SkinButtonAccent(btn)
   if not btn then return end
+  if FrameSkins and FrameSkins.SkinButton then
+    FrameSkins:SkinButton(btn, "info")
+  end
+  local fs = btn.GetFontString and btn:GetFontString()
+  if fs and Fonts and Fonts.Apply then
+    Fonts:Apply(fs, "button")
+  end
+  local defaultHoverR, defaultHoverG, defaultHoverB = ColorTriplet(Colors.TEXT and Colors.TEXT.gold, THEME.gold)
+  local defaultNormalR, defaultNormalG, defaultNormalB = ColorTriplet(Colors.TEXT and Colors.TEXT.off_white, THEME.white)
   btn:SetScript("OnEnter", function()
     local fs = btn.GetFontString and btn:GetFontString()
     if fs then
       if btn.leafHoverTextR then
         fs:SetTextColor(btn.leafHoverTextR, btn.leafHoverTextG or btn.leafHoverTextR, btn.leafHoverTextB or btn.leafHoverTextR)
       else
-        fs:SetTextColor(THEME.leaf[1], THEME.leaf[2], THEME.leaf[3])
+        fs:SetTextColor(defaultHoverR, defaultHoverG, defaultHoverB)
       end
     end
   end)
@@ -1373,7 +1440,7 @@ local function SkinButtonAccent(btn)
       if btn.leafTextR then
         fs:SetTextColor(btn.leafTextR, btn.leafTextG or btn.leafTextR, btn.leafTextB or btn.leafTextR)
       else
-        fs:SetTextColor(1, 1, 1)
+        fs:SetTextColor(defaultNormalR, defaultNormalG, defaultNormalB)
       end
     end
   end)
@@ -18813,17 +18880,22 @@ end
 function UpdateWorkOrderModeButtonVisual(btn, selected)
   if not btn then return end
   btn.isSelected = selected and true or nil
-  if selected then
-    btn:SetBackdropColor(THEME.leaf2[1], THEME.leaf2[2], THEME.leaf2[3], 0.92)
-    btn:SetBackdropBorderColor(THEME.leaf[1], THEME.leaf[2], THEME.leaf[3], 1)
-    if btn.text then
-      btn.text:SetTextColor(1, 1, 1)
-    end
+  if FrameSkins and FrameSkins.SkinTab then
+    FrameSkins:SkinTab(btn, selected and true or false)
   else
-    btn:SetBackdropColor(0.09, 0.09, 0.11, 0.92)
-    btn:SetBackdropBorderColor(0.35, 0.35, 0.4, 0.85)
-    if btn.text then
-      btn.text:SetTextColor(0.88, 0.88, 0.88)
+    if selected then
+      btn:SetBackdropColor(THEME.leaf2[1], THEME.leaf2[2], THEME.leaf2[3], 0.92)
+      btn:SetBackdropBorderColor(THEME.leaf[1], THEME.leaf[2], THEME.leaf[3], 1)
+    else
+      btn:SetBackdropColor(0.09, 0.09, 0.11, 0.92)
+      btn:SetBackdropBorderColor(0.35, 0.35, 0.4, 0.85)
+    end
+  end
+  if btn.text then
+    if selected then
+      SetTextColorFromPalette(btn.text, Colors.TEXT and Colors.TEXT.gold, THEME.gold)
+    else
+      SetTextColorFromPalette(btn.text, Colors.TEXT and Colors.TEXT.off_white, THEME.white)
     end
   end
 end
@@ -18842,6 +18914,9 @@ function CreateWorkOrderModeButton(parent, label)
   local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
   text:SetPoint("CENTER", btn, "CENTER", 0, 0)
   text:SetText(label or "")
+  if Fonts and Fonts.Apply then
+    Fonts:Apply(text, "body_small")
+  end
   btn.text = text
 
   btn:SetScript("OnEnter", function()
@@ -25470,20 +25545,29 @@ function BuildShoutoutsPanel(panel)
   panel.shoutScrollFrame = shoutScrollFrame
   panel.shoutScrollChild = shoutScrollChild
   panel.shoutScrollBar = shoutScrollBar
+  SkinScrollComponents(shoutScrollFrame, shoutScrollBar)
   panel.shoutEntries = {}
 end
 
 function CreateScrollablePanel(panel, title, desc)
+  SkinPanelFrame(panel, Colors.PRIMARY and Colors.PRIMARY.medium)
   local h = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   h:SetPoint("TOPLEFT", panel, "TOPLEFT", 12, -12)
   h:SetText(title)
-  h:SetTextColor(THEME.leaf[1], THEME.leaf[2], THEME.leaf[3])
+  if Fonts and Fonts.Apply then
+    Fonts:Apply(h, "header_medium")
+  end
+  SetTextColorFromPalette(h, Colors.TEXT and Colors.TEXT.gold, THEME.gold)
   
   local infoText = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   infoText:SetPoint("TOPLEFT", panel, "TOPLEFT", 12, -40)
   infoText:SetWidth(500)
   infoText:SetJustifyH("LEFT")
   infoText:SetText(desc)
+  if Fonts and Fonts.Apply then
+    Fonts:Apply(infoText, "body_normal")
+  end
+  SetTextColorFromPalette(infoText, Colors.TEXT and Colors.TEXT.off_white, THEME.white)
   
   local scrollFrame = CreateFrame("ScrollFrame", nil, panel)
   scrollFrame:SetPoint("TOPLEFT", panel, "TOPLEFT", 12, -80)
@@ -25548,9 +25632,11 @@ function CreateScrollablePanel(panel, title, desc)
   panel.scrollFrame = scrollFrame
   panel.scrollChild = scrollChild
   panel.scrollBar = scrollBar
+  SkinScrollComponents(scrollFrame, scrollBar)
 end
 
 function BuildLeaderboardPanel(panel, isWeekly)
+  SkinPanelFrame(panel, Colors.PRIMARY and Colors.PRIMARY.medium)
   -- Block header background
   local headerBG = panel:CreateTexture(nil, "BACKGROUND")
   headerBG:SetPoint("TOP", panel, "TOP", -15, -10)
@@ -25638,6 +25724,7 @@ function BuildLeaderboardPanel(panel, isWeekly)
   panel.scrollFrame = scrollFrame
   panel.scrollChild = scrollChild
   panel.scrollBar = scrollBar
+  SkinScrollComponents(scrollFrame, scrollBar)
   panel.leaderEntries = {}
   panel.isWeekly = isWeekly
 
@@ -28642,6 +28729,9 @@ function LeafVE.UI:Build()
   if LEAFVE_UI_MODERN and LEAFVE_UI_MODERN.ApplyModernFrame then
     LEAFVE_UI_MODERN:ApplyModernFrame(f)
   end
+  if f.SetBackdropColor and Colors.PRIMARY and Colors.PRIMARY.darkest then
+    f:SetBackdropColor(Colors.PRIMARY.darkest.r, Colors.PRIMARY.darkest.g, Colors.PRIMARY.darkest.b, 0.95)
+  end
   MakeResizeHandle(f)
   
   f:SetScript("OnSizeChanged", function()
@@ -28683,13 +28773,20 @@ function LeafVE.UI:Build()
   -- Title (CENTERED, GOLD)
   local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   title:SetPoint("TOP", f, "TOP", 0, -12)  -- ← CENTERED
-  title:SetText("|cFFFFD700Leaf Village Legends|r")  -- ← GOLD COLOR
+  title:SetText("Leaf Village Legends")
+  if Fonts and Fonts.Apply then
+    Fonts:Apply(title, "header_large", "OUTLINE")
+  end
+  SetTextColorFromPalette(title, Colors.TEXT and Colors.TEXT.gold, THEME.gold)
   
   -- Subtitle description (centered below title)
   local sub = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   sub:SetPoint("TOP", title, "BOTTOM", 0, -2)
   sub:SetText("Auto-tracking: Login + Group Points")
-  sub:SetTextColor(0.7, 0.7, 0.7)
+  if Fonts and Fonts.Apply then
+    Fonts:Apply(sub, "body_small")
+  end
+  SetTextColorFromPalette(sub, Colors.TEXT and Colors.TEXT.muted_gray, {0.7, 0.7, 0.7})
   
   -- Emblem (left side, keep existing)
   local emblem = f:CreateTexture(nil, "ARTWORK")
@@ -28703,7 +28800,11 @@ function LeafVE.UI:Build()
   -- Created by credit (FAR RIGHT)
   local credit = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
   credit:SetPoint("TOPRIGHT", f, "TOPRIGHT", -35, -12)
-  credit:SetText("|cFF2DD35CCreated by Methl|r")
+  credit:SetText("Created by Methl")
+  if Fonts and Fonts.Apply then
+    Fonts:Apply(credit, "body_small")
+  end
+  SetTextColorFromPalette(credit, Colors.TEXT and Colors.TEXT.off_white, THEME.white)
   credit:SetAlpha(0.9)
   
   local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
@@ -28725,10 +28826,12 @@ function LeafVE.UI:Build()
     self.left:SetPoint("BOTTOMLEFT", self.inset, "BOTTOMLEFT", 0, 0)
     self.left:SetPoint("TOPRIGHT", self.inset, "TOPRIGHT", -470, 0)
     self.left:SetPoint("BOTTOMRIGHT", self.inset, "BOTTOMRIGHT", -470, 0)
+    SkinPanelFrame(self.left, Colors.PRIMARY and Colors.PRIMARY.medium)
 
     self.panels = {}
     self.panels.update = CreateFrame("Frame", nil, self.left)
     self.panels.update:SetAllPoints(self.left)
+    SkinPanelFrame(self.panels.update, Colors.PRIMARY and Colors.PRIMARY.medium)
     BuildUpdatePanel(self.panels.update)
 
     tabUpdate:SetScript("OnClick", function()
@@ -28822,12 +28925,14 @@ function LeafVE.UI:Build()
   self.inset = CreateInset(f)
   self.inset:SetPoint("TOPLEFT", f, "TOPLEFT", 12, -106)
   self.inset:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -12, 12)
+  SkinPanelFrame(self.inset, Colors.PRIMARY and Colors.PRIMARY.dark)
   
   self.left = CreateFrame("Frame", nil, self.inset)
   self.left:SetPoint("TOPLEFT", self.inset, "TOPLEFT", 0, 0)
   self.left:SetPoint("BOTTOMLEFT", self.inset, "BOTTOMLEFT", 0, 0)
   self.left:SetPoint("TOPRIGHT", self.inset, "TOPRIGHT", -470, 0)
   self.left:SetPoint("BOTTOMRIGHT", self.inset, "BOTTOMRIGHT", -470, 0)
+  SkinPanelFrame(self.left, Colors.PRIMARY and Colors.PRIMARY.medium)
   
   self:BuildPlayerCard(self.inset)
   
@@ -28900,6 +29005,10 @@ function LeafVE.UI:Build()
   self.panels.join = CreateFrame("Frame", nil, self.left)
   self.panels.join:SetAllPoints(self.left)
   BuildJoinPanel(self.panels.join)
+
+  for _, panelFrame in pairs(self.panels) do
+    SkinPanelFrame(panelFrame, Colors.PRIMARY and Colors.PRIMARY.medium)
+  end
   
   -- Tab click handlers
   self.tabMe:SetScript("OnClick", function()
