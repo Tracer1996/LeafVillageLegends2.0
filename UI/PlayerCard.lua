@@ -302,7 +302,6 @@ function LeafVE_PlayerCard:Create(parent)
     local line2 = (member.designations and member.designations[2]) or ""
     self.designLine1:SetText(line1)
     self.designLine2:SetText(line2)
-    self.designLabel:SetText("Designations:")
     self.designLabel:SetTextColor(mr, mg, mb, 1)
     self.designLine1:SetTextColor(cr, cg, cb, 1)
     self.designLine2:SetTextColor(mr, mg, mb, 1)
