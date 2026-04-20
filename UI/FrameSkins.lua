@@ -245,23 +245,23 @@ function LeafVE_FrameSkins:SkinButton(frame, style)
       return
     end
 
-    local bg = theme.bg
+    local bgColor = theme.bg
     local border = theme.border
     local text = theme.text or TEXT.primary
     local glowAlpha = 0
 
     if state == "hover" then
-      bg = theme.hoverBg or bg
+      bgColor = theme.hoverBg or bgColor
       border = theme.hoverBorder or border
       text = theme.hoverText or text
       glowAlpha = 0.08
     elseif state == "pressed" then
-      bg = theme.pressedBg or bg
+      bgColor = theme.pressedBg or bgColor
       border = theme.pressedBorder or border
       glowAlpha = 0.04
     end
 
-    local br, bg, bb = ResolveColor(bg)
+    local br, bg, bb = ResolveColor(bgColor)
     local er, eg, eb = ResolveColor(border)
     frame:SetBackdropColor(br, bg, bb, 1)
     frame:SetBackdropBorderColor(er, eg, eb, 1)
