@@ -4,8 +4,8 @@ local THEME = LeafVE_Theme or {}
 local BG = THEME.BG or {}
 local TEXT = THEME.TEXT or {}
 local BORDER = THEME.BORDER or {}
-local ACCENT = THEME.ACCENT or {}
 local STATUS = THEME.STATUS or {}
+local LAYOUT = THEME.LAYOUT or {}
 
 local WHITE = "Interface\\Buttons\\WHITE8x8"
 
@@ -37,86 +37,91 @@ local function ApplyPane(frame, bgColor, borderColor, edge)
   frame:SetBackdropBorderColor(br, bg, bb, 1)
 end
 
+local function ApplyFont(fs, style, fallbackPath, fallbackSize, fallbackColor)
+  if not fs then return end
+  if LeafVE_Fonts and LeafVE_Fonts.Apply then
+    LeafVE_Fonts:Apply(fs, style, "")
+    return
+  end
+  fs:SetFont(fallbackPath, fallbackSize, "")
+  if fallbackColor and fs.SetTextColor then
+    local r, g, b = RGBA(fallbackColor)
+    fs:SetTextColor(r, g, b, 1)
+  end
+end
+
 function LeafVE_PlayerCard:Create(parent)
   local card = CreateFrame("Frame", nil, parent)
+  local sectionGap = 8
+  local buttonGap = 8
+  local buttonHeight = LAYOUT.btn_h or 26
+
   ApplyPane(card, BG.panel, BORDER.subtle, 1)
 
-  card.header = CreateFrame("Frame", nil, card)
-  card.header:SetPoint("TOPLEFT", card, "TOPLEFT", 8, -8)
-  card.header:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, -8)
-  card.header:SetHeight(74)
-  ApplyPane(card.header, BG.elevated, BORDER.subtle, 1)
-
-  card.statusDot = card.header:CreateTexture(nil, "OVERLAY")
-  card.statusDot:SetTexture(WHITE)
-  card.statusDot:SetPoint("TOPLEFT", card.header, "TOPLEFT", 10, -10)
-  card.statusDot:SetSize(6, 6)
-
-  card.statusLabel = card.header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  card.statusLabel:SetPoint("LEFT", card.statusDot, "RIGHT", 6, 0)
-  card.statusLabel:SetFont("Fonts\\ARIALN.TTF", 10, "")
-
-  card.nameFS = card.header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  card.nameFS:SetPoint("TOPLEFT", card.header, "TOPLEFT", 10, -22)
-  card.nameFS:SetPoint("TOPRIGHT", card.header, "TOPRIGHT", -10, -22)
-  card.nameFS:SetJustifyH("LEFT")
-  card.nameFS:SetFont("Fonts\\FRIZQT__.TTF", 19, "")
-
-  card.subtitleFS = card.header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  card.subtitleFS:SetPoint("TOPLEFT", card.nameFS, "BOTTOMLEFT", 0, -2)
-  card.subtitleFS:SetFont("Fonts\\ARIALN.TTF", 11, "")
-  card.subtitleFS:SetJustifyH("LEFT")
-
-  card.rankFS = card.header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  card.rankFS:SetPoint("TOPRIGHT", card.header, "TOPRIGHT", -10, -44)
-  card.rankFS:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-  card.rankFS:SetJustifyH("RIGHT")
-
   card.modelWrap = CreateFrame("Frame", nil, card)
-  card.modelWrap:SetPoint("TOPLEFT", card.header, "BOTTOMLEFT", 0, -8)
-  card.modelWrap:SetPoint("TOPRIGHT", card.header, "BOTTOMRIGHT", 0, -8)
-  card.modelWrap:SetHeight(190)
-  ApplyPane(card.modelWrap, BG.base, BORDER.normal, 2)
+  card.modelWrap:SetPoint("TOPLEFT", card, "TOPLEFT", sectionGap, -sectionGap)
+  card.modelWrap:SetPoint("TOPRIGHT", card, "TOPRIGHT", -sectionGap, -sectionGap)
+  card.modelWrap:SetHeight(200)
+  ApplyPane(card.modelWrap, BG.base, BORDER.normal, 1)
 
   card.model = CreateFrame("PlayerModel", nil, card.modelWrap)
   card.model:SetPoint("TOPLEFT", card.modelWrap, "TOPLEFT", 2, -2)
   card.model:SetPoint("BOTTOMRIGHT", card.modelWrap, "BOTTOMRIGHT", -2, 2)
   card.model:SetFacing(0.1 * math.pi)
 
-  card.liveFS = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  card.liveFS:SetPoint("TOP", card.modelWrap, "BOTTOM", 0, -4)
-  card.liveFS:SetFont("Fonts\\ARIALN.TTF", 10, "")
-  card.liveFS:SetText("Live")
+  card.identityPane = CreateFrame("Frame", nil, card)
+  card.identityPane:SetPoint("TOPLEFT", card.modelWrap, "BOTTOMLEFT", 0, -sectionGap)
+  card.identityPane:SetPoint("TOPRIGHT", card.modelWrap, "BOTTOMRIGHT", 0, -sectionGap)
+  card.identityPane:SetHeight(98)
+  ApplyPane(card.identityPane, BG.elevated, BORDER.subtle, 1)
 
-  card.specPill = CreateFrame("Frame", nil, card)
-  card.specPill:SetPoint("TOPLEFT", card.liveFS, "BOTTOMLEFT", -90, -8)
-  card.specPill:SetPoint("TOPRIGHT", card.liveFS, "BOTTOMRIGHT", 90, -8)
-  card.specPill:SetHeight(22)
-  ApplyPane(card.specPill, BG.elevated, BORDER.accent, 1)
+  card.statusDot = card.identityPane:CreateTexture(nil, "OVERLAY")
+  card.statusDot:SetTexture(WHITE)
+  card.statusDot:SetPoint("TOPLEFT", card.identityPane, "TOPLEFT", 10, -10)
+  card.statusDot:SetSize(6, 6)
 
-  card.specFS = card.specPill:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  card.specFS:SetPoint("CENTER", card.specPill, "CENTER", 0, 0)
-  card.specFS:SetFont("Fonts\\ARIALN.TTF", 11, "")
+  card.liveFS = card.identityPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  card.liveFS:SetPoint("LEFT", card.statusDot, "RIGHT", 6, 0)
+  ApplyFont(card.liveFS, "label_dim", "Fonts\\ARIALN.TTF", 10, TEXT.muted)
 
-  card.achPane = CreateFrame("Frame", nil, card)
-  card.achPane:SetPoint("TOPLEFT", card.specPill, "BOTTOMLEFT", 0, -8)
-  card.achPane:SetPoint("TOPRIGHT", card.specPill, "BOTTOMRIGHT", 0, -8)
-  card.achPane:SetHeight(42)
-  ApplyPane(card.achPane, BG.elevated, BORDER.subtle, 1)
+  card.nameFS = card.identityPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  card.nameFS:SetPoint("TOPLEFT", card.identityPane, "TOPLEFT", 10, -24)
+  card.nameFS:SetPoint("TOPRIGHT", card.identityPane, "TOPRIGHT", -10, -24)
+  card.nameFS:SetJustifyH("LEFT")
+  ApplyFont(card.nameFS, "card_name", "Fonts\\FRIZQT__.TTF", 17, TEXT.primary)
 
-  card.achLabel = card.achPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  card.achLabel:SetPoint("TOPLEFT", card.achPane, "TOPLEFT", 8, -6)
-  card.achLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-  card.achLabel:SetText("Achievements")
+  card.rankFS = card.identityPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  card.rankFS:SetPoint("TOPRIGHT", card.identityPane, "TOPRIGHT", -10, -24)
+  card.rankFS:SetJustifyH("RIGHT")
+  ApplyFont(card.rankFS, "card_accent", "Fonts\\ARIALN.TTF", 11, TEXT.accent)
 
-  card.achPoints = card.achPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  card.achPoints:SetPoint("TOPLEFT", card.achLabel, "BOTTOMLEFT", 0, -2)
-  card.achPoints:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+  card.subtitleFS = card.identityPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  card.subtitleFS:SetPoint("TOPLEFT", card.nameFS, "BOTTOMLEFT", 0, -2)
+  card.subtitleFS:SetPoint("TOPRIGHT", card.identityPane, "TOPRIGHT", -10, -2)
+  card.subtitleFS:SetJustifyH("LEFT")
+  ApplyFont(card.subtitleFS, "card_sub", "Fonts\\ARIALN.TTF", 11, TEXT.secondary)
+
+  card.specFS = card.identityPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  card.specFS:SetPoint("TOPLEFT", card.subtitleFS, "BOTTOMLEFT", 0, -1)
+  card.specFS:SetPoint("TOPRIGHT", card.identityPane, "TOPRIGHT", -10, -1)
+  card.specFS:SetJustifyH("LEFT")
+  ApplyFont(card.specFS, "body_dim", "Fonts\\ARIALN.TTF", 11, TEXT.muted)
+
+  card.achLabel = card.identityPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  card.achLabel:SetPoint("BOTTOMLEFT", card.identityPane, "BOTTOMLEFT", 10, 8)
+  card.achLabel:SetJustifyH("LEFT")
+  ApplyFont(card.achLabel, "label_dim", "Fonts\\ARIALN.TTF", 10, TEXT.muted)
+  card.achLabel:SetText("ACHIEVEMENTS")
+
+  card.achPoints = card.identityPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  card.achPoints:SetPoint("LEFT", card.achLabel, "RIGHT", 6, 0)
+  card.achPoints:SetJustifyH("LEFT")
+  ApplyFont(card.achPoints, "card_sub", "Fonts\\ARIALN.TTF", 11, TEXT.secondary)
 
   card.badgePane = CreateFrame("Frame", nil, card)
-  card.badgePane:SetPoint("TOPLEFT", card.achPane, "BOTTOMLEFT", 0, -8)
-  card.badgePane:SetPoint("TOPRIGHT", card.achPane, "BOTTOMRIGHT", 0, -8)
-  card.badgePane:SetHeight(88)
+  card.badgePane:SetPoint("TOPLEFT", card.identityPane, "BOTTOMLEFT", 0, -sectionGap)
+  card.badgePane:SetPoint("TOPRIGHT", card.identityPane, "BOTTOMRIGHT", 0, -sectionGap)
+  card.badgePane:SetHeight(94)
   ApplyPane(card.badgePane, BG.panel, BORDER.subtle, 1)
 
   card.badges = {}
@@ -146,8 +151,8 @@ function LeafVE_PlayerCard:Create(parent)
   end
 
   card.designPane = CreateFrame("Frame", nil, card)
-  card.designPane:SetPoint("TOPLEFT", card.badgePane, "BOTTOMLEFT", 0, -8)
-  card.designPane:SetPoint("TOPRIGHT", card.badgePane, "BOTTOMRIGHT", 0, -8)
+  card.designPane:SetPoint("TOPLEFT", card.badgePane, "BOTTOMLEFT", 0, -sectionGap)
+  card.designPane:SetPoint("TOPRIGHT", card.badgePane, "BOTTOMRIGHT", 0, -sectionGap)
   card.designPane:SetHeight(42)
   ApplyPane(card.designPane, BG.elevated, BORDER.subtle, 1)
 
@@ -155,17 +160,18 @@ function LeafVE_PlayerCard:Create(parent)
   card.designLine1:SetPoint("TOPLEFT", card.designPane, "TOPLEFT", 8, -7)
   card.designLine1:SetPoint("TOPRIGHT", card.designPane, "TOPRIGHT", -8, -7)
   card.designLine1:SetJustifyH("LEFT")
-  card.designLine1:SetFont("Fonts\\ARIALN.TTF", 10, "")
+  ApplyFont(card.designLine1, "label", "Fonts\\ARIALN.TTF", 10, TEXT.secondary)
+  card.designLine1:SetText("Designations:")
 
   card.designLine2 = card.designPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   card.designLine2:SetPoint("TOPLEFT", card.designLine1, "BOTTOMLEFT", 0, -4)
   card.designLine2:SetPoint("TOPRIGHT", card.designLine1, "TOPRIGHT", 0, -4)
   card.designLine2:SetJustifyH("LEFT")
-  card.designLine2:SetFont("Fonts\\ARIALN.TTF", 10, "")
+  ApplyFont(card.designLine2, "label_dim", "Fonts\\ARIALN.TTF", 10, TEXT.muted)
 
   card.wisdomPane = CreateFrame("Frame", nil, card)
-  card.wisdomPane:SetPoint("TOPLEFT", card.designPane, "BOTTOMLEFT", 0, -8)
-  card.wisdomPane:SetPoint("TOPRIGHT", card.designPane, "BOTTOMRIGHT", 0, -8)
+  card.wisdomPane:SetPoint("TOPLEFT", card.designPane, "BOTTOMLEFT", 0, -sectionGap)
+  card.wisdomPane:SetPoint("TOPRIGHT", card.designPane, "BOTTOMRIGHT", 0, -sectionGap)
   card.wisdomPane:SetHeight(52)
   ApplyPane(card.wisdomPane, BG.elevated, BORDER.subtle, 1)
 
@@ -181,43 +187,40 @@ function LeafVE_PlayerCard:Create(parent)
   card.wisdomFS:SetJustifyV("TOP")
   card.wisdomFS:SetWordWrap(true)
   card.wisdomFS:SetNonSpaceWrap(true)
-  card.wisdomFS:SetFont("Fonts\\ARIALN.TTF", 10, "")
+  ApplyFont(card.wisdomFS, "body_dim", "Fonts\\ARIALN.TTF", 10, TEXT.muted)
 
   card.buttonRow = CreateFrame("Frame", nil, card)
-  card.buttonRow:SetPoint("TOPLEFT", card.wisdomPane, "BOTTOMLEFT", 0, -10)
-  card.buttonRow:SetPoint("TOPRIGHT", card.wisdomPane, "BOTTOMRIGHT", 0, -10)
-  card.buttonRow:SetHeight(24)
-
-  local gap = 6
-  local buttonWidth = (card.buttonRow:GetWidth() - (gap * 2)) / 3
+  card.buttonRow:SetPoint("TOPLEFT", card.wisdomPane, "BOTTOMLEFT", 0, -sectionGap)
+  card.buttonRow:SetPoint("TOPRIGHT", card.wisdomPane, "BOTTOMRIGHT", 0, -sectionGap)
+  card.buttonRow:SetHeight(buttonHeight)
 
   card.achButton = CreateFrame("Button", nil, card.buttonRow)
-  card.achButton:SetText("ACHIEVEMENTS")
   card.achButton:SetPoint("LEFT", card.buttonRow, "LEFT", 0, 0)
-  card.achButton:SetHeight(24)
+  card.achButton:SetHeight(buttonHeight)
+  card.achButton:SetText("ACHIEVEMENTS")
 
   card.gearButton = CreateFrame("Button", nil, card.buttonRow)
+  card.gearButton:SetPoint("LEFT", card.achButton, "RIGHT", buttonGap, 0)
+  card.gearButton:SetHeight(buttonHeight)
   card.gearButton:SetText("GEAR")
-  card.gearButton:SetPoint("LEFT", card.achButton, "RIGHT", gap, 0)
-  card.gearButton:SetHeight(24)
 
   card.badgesButton = CreateFrame("Button", nil, card.buttonRow)
-  card.badgesButton:SetText("BADGES")
-  card.badgesButton:SetPoint("LEFT", card.gearButton, "RIGHT", gap, 0)
+  card.badgesButton:SetPoint("LEFT", card.gearButton, "RIGHT", buttonGap, 0)
   card.badgesButton:SetPoint("RIGHT", card.buttonRow, "RIGHT", 0, 0)
-  card.badgesButton:SetHeight(24)
+  card.badgesButton:SetHeight(buttonHeight)
+  card.badgesButton:SetText("BADGES")
 
   local function ResizeButtons()
     local total = card.buttonRow:GetWidth() or 0
-    local w = math.max(20, (total - gap * 2) / 3)
-    card.achButton:SetWidth(w)
-    card.gearButton:SetWidth(w)
-    card.badgesButton:SetWidth(w)
+    local width = math.max(20, (total - (buttonGap * 2)) / 3)
+    card.achButton:SetWidth(width)
+    card.gearButton:SetWidth(width)
+    card.badgesButton:SetWidth(width)
   end
   card.buttonRow:SetScript("OnSizeChanged", ResizeButtons)
 
   if LeafVE_FrameSkins and LeafVE_FrameSkins.SkinButton then
-    LeafVE_FrameSkins:SkinButton(card.achButton, "primary")
+    LeafVE_FrameSkins:SkinButton(card.achButton, "secondary")
     LeafVE_FrameSkins:SkinButton(card.gearButton, "secondary")
     LeafVE_FrameSkins:SkinButton(card.badgesButton, "secondary")
   end
@@ -238,11 +241,10 @@ function LeafVE_PlayerCard:Create(parent)
       local badge = arr and arr[i]
       if badge and badge.icon then
         cell.icon:SetTexture(badge.icon)
-        cell:Show()
       else
         cell.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-        cell:Show()
       end
+      cell:Show()
     end
   end
 
@@ -251,20 +253,27 @@ function LeafVE_PlayerCard:Create(parent)
     local member = self.member
 
     local online = member.online and true or false
-    local sr, sg, sb = RGBA(online and STATUS.success or TEXT.muted)
+    local statusColor = online and STATUS.success or TEXT.muted
+    local sr, sg, sb = RGBA(statusColor)
     self.statusDot:SetVertexColor(sr, sg, sb, 1)
-    self.statusLabel:SetText(online and "Online" or "Offline")
-    self.statusLabel:SetTextColor(sr, sg, sb, 1)
+    self.liveFS:SetText(online and "Live" or "Offline")
+    self.liveFS:SetTextColor(sr, sg, sb, 1)
 
     local nr, ng, nb = RGBA(TEXT.primary)
     self.nameFS:SetText(member.name or "Unknown")
     self.nameFS:SetTextColor(nr, ng, nb, 1)
 
     local cr, cg, cb = RGBA(TEXT.secondary)
-    self.subtitleFS:SetText(string.format("Lv.%d  %s", tonumber(member.level) or 0, string.upper(member.class or "UNKNOWN")))
+    local classText = string.upper(member.class or "UNKNOWN")
+    local levelText = tonumber(member.level) or 0
+    self.subtitleFS:SetText(string.format("%s • Level %d", classText, levelText))
     self.subtitleFS:SetTextColor(cr, cg, cb, 1)
 
-    local ar, ag, ab = RGBA(ACCENT.primary)
+    local mr, mg, mb = RGBA(TEXT.muted)
+    self.specFS:SetText(member.spec or "Unknown")
+    self.specFS:SetTextColor(mr, mg, mb, 1)
+
+    local ar, ag, ab = RGBA(TEXT.accent)
     self.rankFS:SetText(member.rank or "")
     self.rankFS:SetTextColor(ar, ag, ab, 1)
 
@@ -277,41 +286,23 @@ function LeafVE_PlayerCard:Create(parent)
     end
     self.model:SetFacing(0.1 * math.pi)
 
-    if online then
-      self.liveFS:Show()
-    else
-      self.liveFS:Hide()
-    end
-    self.liveFS:SetTextColor(ar, ag, ab, 1)
-
-    self.specFS:SetText("Spec: " .. (member.spec or "Unknown"))
-    self.specFS:SetTextColor(ar, ag, ab, 1)
-
-    local hr, hg, hb = RGBA(TEXT.secondary)
-    self.achLabel:SetTextColor(hr, hg, hb, 1)
-    local gr, gg, gb = RGBA(ACCENT.gold)
+    self.achLabel:SetTextColor(mr, mg, mb, 1)
     self.achPoints:SetText(string.format("%d Points", tonumber(member.achievementPoints) or 0))
-    self.achPoints:SetTextColor(gr, gg, gb, 1)
+    self.achPoints:SetTextColor(cr, cg, cb, 1)
 
     self:SetBadges(member.recentBadges)
 
     local line1 = (member.designations and member.designations[1]) or ""
     local line2 = (member.designations and member.designations[2]) or ""
-    self.designLine1:SetText(line1)
+    self.designLine1:SetText("Designations: " .. line1)
     self.designLine2:SetText(line2)
-    self.designLine1:SetTextColor(hr, hg, hb, 1)
-    self.designLine2:SetTextColor(hr, hg, hb, 1)
+    self.designLine1:SetTextColor(cr, cg, cb, 1)
+    self.designLine2:SetTextColor(mr, mg, mb, 1)
 
-    self.quoteMark:SetTextColor(ar, ag, ab, 1)
+    self.quoteMark:SetTextColor(mr, mg, mb, 1)
     self.wisdomFS:SetText(member.wisdom or "")
-    self.wisdomFS:SetTextColor(hr, hg, hb, 1)
+    self.wisdomFS:SetTextColor(mr, mg, mb, 1)
   end
-
-  local tr, tg, tb = RGBA(TEXT.secondary)
-  card.achLabel:SetTextColor(tr, tg, tb, 1)
-  card.designLine1:SetTextColor(tr, tg, tb, 1)
-  card.designLine2:SetTextColor(tr, tg, tb, 1)
-  card.wisdomFS:SetTextColor(tr, tg, tb, 1)
 
   ResizeButtons()
   card:LoadMember({})

@@ -4,16 +4,14 @@ local THEME = LeafVE_Theme or {}
 local BG = THEME.BG or ((LeafVE_Colors and LeafVE_Colors.BG_COLORS) or {})
 local TEXT = THEME.TEXT or ((LeafVE_Colors and LeafVE_Colors.TEXT_COLORS) or {})
 local BORDER = THEME.BORDER or {
-  subtle = {r = 0.14, g = 0.16, b = 0.20},
-  normal = {r = 0.21, g = 0.24, b = 0.31},
-  accent = {r = 0.18, g = 0.8, b = 0.443},
-  gold = {r = 0.788, g = 0.635, b = 0.153},
-  highlight = {r = 0.259, g = 0.298, b = 0.388},
+  subtle = {r = 0.18, g = 0.22, b = 0.28},
+  normal = {r = 0.28, g = 0.34, b = 0.42},
+  accent = {r = 0.24, g = 0.72, b = 0.54},
+  highlight = {r = 0.32, g = 0.38, b = 0.48},
 }
 local STATUS = THEME.STATUS or ((LeafVE_Colors and LeafVE_Colors.STATUS_COLORS) or {})
 local ACCENT = THEME.ACCENT or {
-  primary = {r = 0.18, g = 0.8, b = 0.443},
-  gold = {r = 0.788, g = 0.635, b = 0.153},
+  primary = {r = 0.24, g = 0.72, b = 0.54},
 }
 
 local WHITE = "Interface\\Buttons\\WHITE8x8"
@@ -120,7 +118,7 @@ function LeafVE_FrameSkins:SkinWindow(frame, title, width, height)
     frame._leafWindowSheen:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -1)
     frame._leafWindowSheen:SetHeight(36)
   end
-  frame._leafWindowSheen:SetGradientAlpha("VERTICAL", 1, 1, 1, 0.025, 0, 0, 0, 0.04)
+  frame._leafWindowSheen:SetGradientAlpha("VERTICAL", 1, 1, 1, 0.010, 0, 0, 0, 0.0)
 
   if title and title ~= "" then
     if not frame._leafTitle then
@@ -131,7 +129,7 @@ function LeafVE_FrameSkins:SkinWindow(frame, title, width, height)
     if LeafVE_Fonts and LeafVE_Fonts.Apply then
       LeafVE_Fonts:Apply(frame._leafTitle, "h1", "OUTLINE")
     end
-    local tr, tg, tb = ResolveColor(TEXT.gold or ACCENT.gold)
+    local tr, tg, tb = ResolveColor(TEXT.primary)
     frame._leafTitle:SetTextColor(tr, tg, tb, 1)
   end
 
@@ -163,7 +161,7 @@ local BUTTON_THEMES = {
   },
   secondary = {
     bg = BG.elevated or BG.medium,
-    border = BORDER.normal,
+    border = BORDER.subtle,
     text = TEXT.secondary,
     hoverBg = BG.hover or BG.light,
     hoverBorder = BORDER.accent,
@@ -172,13 +170,13 @@ local BUTTON_THEMES = {
     hoverText = TEXT.accent or ACCENT.primary,
   },
   ghost = {
-    bg = BG.base or BG.darkest,
+    bg = BG.elevated or BG.medium,
     border = BORDER.subtle,
     text = TEXT.secondary,
     hoverBg = BG.hover or BG.light,
-    hoverBorder = BORDER.highlight,
+    hoverBorder = BORDER.accent,
     pressedBg = BG.panel or BG.dark,
-    pressedBorder = BORDER.highlight,
+    pressedBorder = BORDER.accent,
     hoverText = TEXT.primary,
   },
   success = {
@@ -411,7 +409,7 @@ function LeafVE_FrameSkins:SkinTooltip(frame)
   EnsureBackdrop(frame, 1)
 
   local r, g, b = ResolveColor(BG.base or BG.darkest)
-  local br, bg, bb = ResolveColor(BORDER.gold)
+  local br, bg, bb = ResolveColor(BORDER.normal)
   frame:SetBackdropColor(r, g, b, 0.97)
   frame:SetBackdropBorderColor(br, bg, bb, 1)
 
@@ -433,3 +431,29 @@ function SkinProgressBar(frame, color, maxValue) return LeafVE_FrameSkins:SkinPr
 function AddGlowEffect(frame, color, intensity) return LeafVE_FrameSkins:AddGlowEffect(frame, color, intensity) end
 function AddBevel(frame, topColor, bottomColor) return LeafVE_FrameSkins:AddBevel(frame, topColor, bottomColor) end
 function SkinTooltip(frame) return LeafVE_FrameSkins:SkinTooltip(frame) end
+function StyleHeader(fontString)
+  if not fontString then return end
+  if LeafVE_Fonts and LeafVE_Fonts.Apply then
+    LeafVE_Fonts:Apply(fontString, "h2", "")
+  end
+end
+function StyleLabel(fontString)
+  if not fontString then return end
+  if LeafVE_Fonts and LeafVE_Fonts.Apply then
+    LeafVE_Fonts:Apply(fontString, "label", "")
+  end
+end
+function StyleInput(frame)
+  if not frame then return end
+  LeafVE_FrameSkins:SkinPanel(frame, LeafVE_Theme and LeafVE_Theme.BG and LeafVE_Theme.BG.elevated)
+  if frame.GetFontString and frame:GetFontString() then
+    if LeafVE_Fonts and LeafVE_Fonts.Apply then
+      LeafVE_Fonts:Apply(frame:GetFontString(), "input", "")
+    end
+  end
+end
+function StyleToggle(button)
+  if not button then return end
+  LeafVE_FrameSkins:SkinButton(button, "ghost")
+end
+function StylePanel(frame) return LeafVE_FrameSkins:SkinPanel(frame) end

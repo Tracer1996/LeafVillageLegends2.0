@@ -32,7 +32,7 @@ LeafVE_Styles.colors = {
   bgDark = ToArray(bg.base or bg.darkest, 0.96),
   bgPanel = ToArray(bg.panel or bg.dark, 0.88),
   accent = ToArray(accent.primary or text.accent, 1),
-  gold = ToArray(accent.gold or text.gold, 1),
+  gold = ToArray(text.secondary or text.normal, 1),
   muted = ToArray(text.muted or text.muted_gray, 1),
 
   border = ToArray(border.normal or bg.light, 1),
