@@ -3,8 +3,13 @@ LeafVE.UI = LeafVE.UI or {}
 
 function LeafVE.UI:ApplyMainWindowSkin(frame, titleText)
   if not frame then return end
+
   if LeafVE_FrameSkins and LeafVE_FrameSkins.SkinWindow then
     LeafVE_FrameSkins:SkinWindow(frame, titleText)
+  end
+
+  if frame.SetClampedToScreen then
+    frame:SetClampedToScreen(true)
   end
 end
 
