@@ -18871,15 +18871,12 @@ function CreateLeafVEStaticMoneyFrame(parent, frameName)
   display.small = 1
   display.staticMoney = 0
 
-  local prevThis = this
-  this = display
   if SmallMoneyFrame_OnLoad then
-    SmallMoneyFrame_OnLoad()
+    SmallMoneyFrame_OnLoad(display)
   end
   if MoneyFrame_SetType then
-    MoneyFrame_SetType("STATIC")
+    MoneyFrame_SetType(display, "STATIC")
   end
-  this = prevThis
   return display
 end
 
@@ -22106,25 +22103,9 @@ function LeafVE.UI:CreateGuildBankPopup()
   summaryText:SetTextColor(0.75, 0.85, 1.0)
   popup.summaryText = summaryText
 
-  local goldDisplay = CreateFrame("Frame", "LeafVE_GuildBankMoneyFrame", popup, "SmallMoneyFrameTemplate")
+  local goldDisplay = CreateLeafVEStaticMoneyFrame(popup, "LeafVE_GuildBankMoneyFrame")
   goldDisplay:SetPoint("BOTTOM", popup, "BOTTOM", 0, 24)
-  goldDisplay:SetWidth(120)
-  goldDisplay:SetHeight(16)
   goldDisplay:Hide()
-  goldDisplay.small = 1
-  goldDisplay.staticMoney = 0
-
-  do
-    local prevThis = this
-    this = goldDisplay
-    if SmallMoneyFrame_OnLoad then
-      SmallMoneyFrame_OnLoad()
-    end
-    if MoneyFrame_SetType then
-      MoneyFrame_SetType("STATIC")
-    end
-    this = prevThis
-  end
   popup.goldDisplay = goldDisplay
 
   local sourceText = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -24086,24 +24067,9 @@ function LeafVE.UI:BuildGuildBankPanel(panel)
   goldLabel:SetText("|cFFFFD700Tracked Gold|r")
   panel.goldLabel = goldLabel
 
-  local goldDisplay = CreateFrame("Frame", "LeafVE_GuildBankPanelMoneyFrame", sidebarPane, "SmallMoneyFrameTemplate")
+  local goldDisplay = CreateLeafVEStaticMoneyFrame(sidebarPane, "LeafVE_GuildBankPanelMoneyFrame")
   goldDisplay:SetPoint("TOPLEFT", goldLabel, "BOTTOMLEFT", -8, -4)
-  goldDisplay:SetWidth(120)
-  goldDisplay:SetHeight(16)
   goldDisplay:Hide()
-  goldDisplay.small = 1
-  goldDisplay.staticMoney = 0
-  do
-    local prevThis = this
-    this = goldDisplay
-    if SmallMoneyFrame_OnLoad then
-      SmallMoneyFrame_OnLoad()
-    end
-    if MoneyFrame_SetType then
-      MoneyFrame_SetType("STATIC")
-    end
-    this = prevThis
-  end
   panel.goldDisplay = goldDisplay
 
   local ownerLabel = sidebarPane:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
