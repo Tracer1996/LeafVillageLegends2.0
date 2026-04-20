@@ -112,7 +112,7 @@ function LeafVE_IconSystem:CreateMedalIcon(rank)
     [2] = "Interface\\Icons\\INV_Misc_Coin_17",
     [3] = "Interface\\Icons\\INV_Misc_Coin_18",
   }
-  local quality = (rank == 1 and "artifact") or (rank == 2 and "common") or (rank == 3 and "legendary") or "common"
+  local quality = (rank == 1 and "artifact") or (rank == 2 and "rare") or (rank == 3 and "uncommon") or "common"
   return self:CreateQualityBorderedIcon(medalMap[rank] or medalMap[3], quality, 20)
 end
 

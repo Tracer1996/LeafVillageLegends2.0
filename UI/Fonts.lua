@@ -16,7 +16,7 @@ function LeafVE_Fonts:Apply(fontString, styleKey, flags)
   if not fontString or not fontString.SetFont then
     return
   end
-  local style = self.FONTS[styleKey] or self.FONTS.body_normal
+  local style = self.FONTS[styleKey] or self.FONTS.body_normal or self.FONTS.body_small
   if not style then
     return
   end

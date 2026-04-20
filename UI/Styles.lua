@@ -20,6 +20,10 @@ local function HexToArray(hex)
   return {1, 1, 1}
 end
 
+local function GetFontPath(definition, fallback)
+  return (definition and definition.path) or fallback
+end
+
 LeafVE_Styles.colors = {
   rare = ToArray(quality.rare, 1),
   uncommon = ToArray(quality.uncommon, 1),
@@ -32,9 +36,9 @@ LeafVE_Styles.colors = {
 }
 
 LeafVE_Styles.fonts = {
-  title = (fontDB.header_large and fontDB.header_large.path) or "Fonts\\FRIZQT__.TTF",
-  normal = (fontDB.body_normal and fontDB.body_normal.path) or "Fonts\\ARIALN.TTF",
-  highlight = (fontDB.body_small and fontDB.body_small.path) or "Fonts\\ARIALN.TTF",
+  title = GetFontPath(fontDB.header_large, "Fonts\\FRIZQT__.TTF"),
+  normal = GetFontPath(fontDB.body_normal, "Fonts\\ARIALN.TTF"),
+  highlight = GetFontPath(fontDB.body_small, "Fonts\\ARIALN.TTF"),
   defs = fontDB,
 }
 
