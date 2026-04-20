@@ -54,6 +54,6 @@ LeafVE_Theme.TEXT_COLORS = {
   normal       = LeafVE_Theme.TEXT.secondary,
   muted_gray   = LeafVE_Theme.TEXT.muted,
   muted        = LeafVE_Theme.TEXT.muted,
-  gold         = LeafVE_Theme.TEXT.secondary,
+  gold         = LeafVE_Theme.TEXT.secondary, -- compatibility redirect (no yellow decorative text)
 }
 LeafVE_Theme.STATUS_COLORS = LeafVE_Theme.STATUS

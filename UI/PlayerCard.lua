@@ -156,12 +156,18 @@ function LeafVE_PlayerCard:Create(parent)
   card.designPane:SetHeight(42)
   ApplyPane(card.designPane, BG.elevated, BORDER.subtle, 1)
 
+  card.designLabel = card.designPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  card.designLabel:SetPoint("TOPLEFT", card.designPane, "TOPLEFT", 8, -5)
+  card.designLabel:SetPoint("TOPRIGHT", card.designPane, "TOPRIGHT", -8, -5)
+  card.designLabel:SetJustifyH("LEFT")
+  ApplyFont(card.designLabel, "label_dim", "Fonts\\ARIALN.TTF", 10, TEXT.muted)
+  card.designLabel:SetText("Designations:")
+
   card.designLine1 = card.designPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  card.designLine1:SetPoint("TOPLEFT", card.designPane, "TOPLEFT", 8, -7)
-  card.designLine1:SetPoint("TOPRIGHT", card.designPane, "TOPRIGHT", -8, -7)
+  card.designLine1:SetPoint("TOPLEFT", card.designLabel, "BOTTOMLEFT", 0, -1)
+  card.designLine1:SetPoint("TOPRIGHT", card.designLabel, "TOPRIGHT", 0, -1)
   card.designLine1:SetJustifyH("LEFT")
   ApplyFont(card.designLine1, "label", "Fonts\\ARIALN.TTF", 10, TEXT.secondary)
-  card.designLine1:SetText("Designations:")
 
   card.designLine2 = card.designPane:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   card.designLine2:SetPoint("TOPLEFT", card.designLine1, "BOTTOMLEFT", 0, -4)
@@ -266,7 +272,7 @@ function LeafVE_PlayerCard:Create(parent)
     local cr, cg, cb = RGBA(TEXT.secondary)
     local classText = string.upper(member.class or "UNKNOWN")
     local levelText = tonumber(member.level) or 0
-    self.subtitleFS:SetText(string.format("%s • Level %d", classText, levelText))
+    self.subtitleFS:SetText(string.format("%s | Level %d", classText, levelText))
     self.subtitleFS:SetTextColor(cr, cg, cb, 1)
 
     local mr, mg, mb = RGBA(TEXT.muted)
@@ -294,8 +300,10 @@ function LeafVE_PlayerCard:Create(parent)
 
     local line1 = (member.designations and member.designations[1]) or ""
     local line2 = (member.designations and member.designations[2]) or ""
-    self.designLine1:SetText("Designations: " .. line1)
+    self.designLine1:SetText(line1)
     self.designLine2:SetText(line2)
+    self.designLabel:SetText("Designations:")
+    self.designLabel:SetTextColor(mr, mg, mb, 1)
     self.designLine1:SetTextColor(cr, cg, cb, 1)
     self.designLine2:SetTextColor(mr, mg, mb, 1)
 
