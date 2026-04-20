@@ -22,8 +22,5 @@ function LeafVE_Fonts:Apply(fontString, styleKey, flags)
   end
 
   local ok = fontString:SetFont(style.font, style.size, flags or style.flags or "")
-  if ok == nil then
-    return true
-  end
   return ok and true or false
 end

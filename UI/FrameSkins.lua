@@ -183,7 +183,6 @@ function LeafVE_FrameSkins.ApplyDivider(frame)
     line:SetTexture("Interface\\Buttons\\WHITE8X8")
     line:SetPoint("LEFT", frame, "LEFT", 0, 0)
     line:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
-    line:SetPoint("CENTER", frame, "CENTER", 0, 0)
     line:SetHeight(1)
     frame.__LeafVEDivider = line
   end
