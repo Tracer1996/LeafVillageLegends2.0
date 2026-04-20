@@ -17,16 +17,22 @@ end
 
 function LeafVE_UIModernization:ApplyModernFrame(frame)
   if not frame then return end
-  frame:SetBackdrop({
-    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true, tileSize = 16, edgeSize = 14,
-    insets = {left = 3, right = 3, top = 3, bottom = 3}
-  })
-  local bgR, bgG, bgB, bgA = ColorOr(COLORS.bgDark, {0.04, 0.06, 0.15, 0.96})
-  local bR, bG, bB, bA = ColorOr(COLORS.border, {0.20, 0.24, 0.44, 1.00})
-  frame:SetBackdropColor(bgR, bgG, bgB, bgA)
-  frame:SetBackdropBorderColor(bR, bG, bB, bA)
+  if LeafVE_ApplyMainWindowSkin then
+    LeafVE_ApplyMainWindowSkin(frame)
+  elseif LeafVE_FrameSkins and LeafVE_FrameSkins.SkinWindow then
+    LeafVE_FrameSkins:SkinWindow(frame, nil)
+  else
+    frame:SetBackdrop({
+      bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+      edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+      tile = true, tileSize = 16, edgeSize = 14,
+      insets = {left = 3, right = 3, top = 3, bottom = 3}
+    })
+    local bgR, bgG, bgB, bgA = ColorOr(COLORS.bgDark, {0.04, 0.06, 0.15, 0.96})
+    local bR, bG, bB, bA = ColorOr(COLORS.border, {0.20, 0.24, 0.44, 1.00})
+    frame:SetBackdropColor(bgR, bgG, bgB, bgA)
+    frame:SetBackdropBorderColor(bR, bG, bB, bA)
+  end
   if frame.SetClampedToScreen then
     frame:SetClampedToScreen(true)
   end
@@ -35,6 +41,10 @@ end
 function LeafVE_UIModernization:StyleButton(button)
   if not button or button._leafModernStyle then return end
   button._leafModernStyle = true
+
+  if LeafVE_FrameSkins and LeafVE_FrameSkins.SkinButton then
+    LeafVE_FrameSkins:SkinButton(button, "info")
+  end
 
   local glow = button:CreateTexture(nil, "BACKGROUND")
   glow:SetPoint("TOPLEFT", button, "TOPLEFT", -4, 4)
@@ -58,6 +68,10 @@ end
 
 function LeafVE_UIModernization:AnimateTabTransition(panel)
   if not panel then return end
+  if LeafVE_Animations and LeafVE_Animations.FadeIn then
+    LeafVE_Animations:FadeIn(panel, TAB_FADE_DURATION)
+    return
+  end
   panel:Show()
   panel:SetAlpha(0)
   if not panel._leafFadeDriver then

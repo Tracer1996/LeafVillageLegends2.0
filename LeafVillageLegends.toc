@@ -8,6 +8,11 @@
 ## OptionalDeps: AtlasLoot
 
 LeafVillageLegends.lua
+Utils\Colors.lua
+UI\Fonts.lua
+UI\FrameSkins.lua
+UI\Animations.lua
+UI\IconSystem.lua
 UI\Styles.lua
 UI\UI_Modernization.lua
 Core\Constants.lua

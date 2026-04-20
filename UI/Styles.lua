@@ -1,27 +1,54 @@
 LeafVE_Styles = LeafVE_Styles or {}
 
+local ColorDB = LeafVE_Colors or {}
+local quality = ColorDB.QUALITY_COLORS or {}
+local bg = ColorDB.BG_COLORS or {}
+local text = ColorDB.TEXT_COLORS or {}
+local classHex = ColorDB.CLASS_COLORS_HEX or {}
+local fontDB = LeafVE_Fonts and LeafVE_Fonts.FONTS or {}
+
+local function ToArray(c, alpha)
+  if not c then return {1, 1, 1, alpha or 1} end
+  return {c.r or 1, c.g or 1, c.b or 1, alpha or 1}
+end
+
+local function HexToArray(hex)
+  if ColorDB.HexToRGB then
+    local r, g, b = ColorDB:HexToRGB(hex)
+    return {r, g, b}
+  end
+  return {1, 1, 1}
+end
+
 LeafVE_Styles.colors = {
-  rare = { 0.00, 0.44, 0.87, 1.00 },       -- #0070DD
-  uncommon = { 0.12, 1.00, 0.00, 1.00 },   -- #1EFF00
-  epic = { 0.64, 0.21, 0.93, 1.00 },       -- #A335EE
-  bgDark = { 0.04, 0.06, 0.15, 0.96 },     -- #0a0e27
-  bgPanel = { 0.10, 0.12, 0.23, 0.88 },    -- #1a1f3a
-  border = { 0.20, 0.24, 0.44, 1.00 },
-  soft = { 0.14, 0.17, 0.32, 1.00 },
-  white = { 0.96, 0.96, 0.96, 1.00 },
+  rare = ToArray(quality.rare, 1),
+  uncommon = ToArray(quality.uncommon, 1),
+  epic = ToArray(quality.epic, 1),
+  bgDark = ToArray(bg.darkest, 0.96),
+  bgPanel = ToArray(bg.dark, 0.88),
+  border = ToArray(bg.light, 1),
+  soft = ToArray(bg.medium, 1),
+  white = ToArray(text.bright, 1),
 }
 
 LeafVE_Styles.fonts = {
-  title = "GameFontNormalLarge",
-  normal = "GameFontNormal",
-  highlight = "GameFontHighlightSmall",
+  title = (fontDB.header_large and fontDB.header_large.path) or "Fonts\\FRIZQT__.TTF",
+  normal = (fontDB.body_normal and fontDB.body_normal.path) or "Fonts\\ARIALN.TTF",
+  highlight = (fontDB.body_small and fontDB.body_small.path) or "Fonts\\ARIALN.TTF",
+  defs = fontDB,
 }
 
 LeafVE_Styles.classColors = {
-  WARRIOR = {0.78, 0.61, 0.43}, PALADIN = {0.96, 0.55, 0.73}, HUNTER = {0.67, 0.83, 0.45},
-  ROGUE = {1.00, 0.96, 0.41}, PRIEST = {1.00, 1.00, 1.00}, SHAMAN = {0.14, 0.35, 1.00},
-  MAGE = {0.41, 0.80, 0.94}, WARLOCK = {0.58, 0.51, 0.79}, DRUID = {1.00, 0.49, 0.04},
-  DEATHKNIGHT = {0.77, 0.12, 0.23},
+  WARRIOR = HexToArray(classHex.WARRIOR),
+  PALADIN = HexToArray(classHex.PALADIN),
+  HUNTER = HexToArray(classHex.HUNTER),
+  ROGUE = HexToArray(classHex.ROGUE),
+  PRIEST = HexToArray(classHex.PRIEST),
+  SHAMAN = HexToArray(classHex.SHAMAN),
+  MAGE = HexToArray(classHex.MAGE),
+  WARLOCK = HexToArray(classHex.WARLOCK),
+  DRUID = HexToArray(classHex.DRUID),
+  DEATHKNIGHT = HexToArray(classHex.DEATHKNIGHT),
 }
 
 LeafVE_Styles.medals = { "🥇", "🥈", "🥉" }
