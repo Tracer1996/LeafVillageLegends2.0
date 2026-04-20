@@ -13,6 +13,8 @@ if AceLibrary then
 	end
 end
 
+local SPELL_CHARGES_FORMAT = ITEM_SPELL_CHARGES_P1 or ITEM_SPELL_CHARGES or "%d Charges"
+
 GetSpellInfoAtlasLootDB = GetSpellInfoAtlasLootDB or {
 	["enchants"] = {
 		[48] = {
@@ -620,43 +622,43 @@ GetSpellInfoAtlasLootDB = GetSpellInfoAtlasLootDB or {
 			["name"] = "Minor Wizard Oil",
 			["icon"] = "Interface\\Icons\\INV_Poison_MindNumbing",
 			["item"] = 20744,
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 5),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 5),
 		},
 		[25125] = {
 			["name"] = "Minor Mana Oil",
 			["icon"] = "Interface\\Icons\\INV_Potion_98",
 			["item"] = 20745,
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 5),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 5),
 		},
 		[25126] = {
 			["name"] = "Lesser Wizard Oil",
 			["icon"] = "Interface\\Icons\\INV_Potion_103",
 			["item"] = 20746,
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 5),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 5),
 		},
 		[25127] = {
 			["name"] = "Lesser Mana Oil",
 			["icon"] = "Interface\\Icons\\INV_Potion_99",
 			["item"] = 20747,
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 5),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 5),
 		},
 		[25128] = {
 			["name"] = "Wizard Oil",
 			["icon"] = "Interface\\Icons\\INV_Potion_104",
 			["item"] = 20750,
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 5),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 5),
 		},
 		[25129] = {
 			["name"] = "Brilliant Wizard Oil",
 			["icon"] = "Interface\\Icons\\INV_Potion_105",
 			["item"] = 20749,
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 5),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 5),
 		},
 		[25130] = {
 			["name"] = "Brilliant Mana Oil",
 			["icon"] = "Interface\\Icons\\INV_Potion_100",
 			["item"] = 20748,
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 5),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 5),
 		},
 		[27837] = {
 			["name"] = "Enchant 2H Weapon - Agility",
@@ -3399,7 +3401,7 @@ GetSpellInfoAtlasLootDB = GetSpellInfoAtlasLootDB or {
 			["name"] = AL["Flame Deflector"],
 			["castTime"] = 12.5,
 			["tools"] = { 5956, 6219 },
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 5),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 5),
 			["reagents"] = {
 				{ 4375 },
 				{ 4402 },
@@ -3462,7 +3464,7 @@ GetSpellInfoAtlasLootDB = GetSpellInfoAtlasLootDB or {
 			["craftItem"] = 4381,
 			["name"] = AL["Minor Recombobulator"],
 			["castTime"] = 12.5,
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 10),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 10),
 			["reagents"] = {
 				{ 4371 },
 				{ 4375, 2 },
@@ -3520,7 +3522,7 @@ GetSpellInfoAtlasLootDB = GetSpellInfoAtlasLootDB or {
 			["name"] = AL["Ice Deflector"],
 			["castTime"] = 12.5,
 			["tools"] = { 5956, 6219 },
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 5),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 5),
 			["reagents"] = {
 				{ 4375 },
 				{ 3829 },
@@ -3540,7 +3542,7 @@ GetSpellInfoAtlasLootDB = GetSpellInfoAtlasLootDB or {
 			["name"] = AL["Discombobulator Ray"],
 			["castTime"] = 12.5,
 			["tools"] = { 5956, 6219 },
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 5),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 5),
 			["reagents"] = {
 				{ 4375, 3 },
 				{ 4306, 2 },
@@ -3553,7 +3555,7 @@ GetSpellInfoAtlasLootDB = GetSpellInfoAtlasLootDB or {
 			["name"] = AL["Portable Bronze Mortar"],
 			["castTime"] = 12.5,
 			["tools"] = { 5956, 6219 },
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 8),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 8),
 			["reagents"] = {
 				{ 4371, 4 },
 				{ 4387 },
@@ -7408,7 +7410,7 @@ GetSpellInfoAtlasLootDB = GetSpellInfoAtlasLootDB or {
 			["name"] = AL["Goblin Mortar"],
 			["castTime"] = 25,
 			["tools"] = { 5956, 6219 },
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 6),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 6),
 			["reagents"] = {
 				{ 10559, 2 },
 				{ 3860, 4 },
@@ -7686,7 +7688,7 @@ GetSpellInfoAtlasLootDB = GetSpellInfoAtlasLootDB or {
 			["castTime"] = 25,
 			["tools"] = { 5956, 6219 },
 			["text"] = AL["Reloads an empty Goblin mortar."],
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 6),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 6),
 			["reagents"] = {
 				{ 10577 },
 				{ 3860 },
@@ -11195,7 +11197,7 @@ GetSpellInfoAtlasLootDB = GetSpellInfoAtlasLootDB or {
 			["craftItem"] = 18637,
 			["name"] = AL["Major Recombobulator"],
 			["castTime"] = 25,
-			["extra"] = format(ITEM_SPELL_CHARGES_P1, 10),
+			["extra"] = format(SPELL_CHARGES_FORMAT, 10),
 			["reagents"] = {
 				{ 16000, 2 },
 				{ 18631 },
