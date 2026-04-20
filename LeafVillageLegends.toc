@@ -7,11 +7,25 @@
 ## SavedVariablesPerCharacter: LeafVE_DB
 ## OptionalDeps: AtlasLoot
 
-Styles.lua
-UI_Modernization.lua
+LeafVillageLegends.lua
+UI\Styles.lua
+UI\UI_Modernization.lua
+Core\Constants.lua
+Core\Database.lua
+Core\Events.lua
+Utils\Helpers.lua
+Utils\Protocol.lua
+Utils\GearStats.lua
+UI\UI_Main.lua
+Features\Leaderboard.lua
+Features\GearTracking.lua
+Features\WorkOrders.lua
+Features\Badges.lua
+Features\RaidSignups.lua
+Features\GroupTracking.lua
 LeafVE_Protocol.lua
 LeafVE_ItemIcons.lua
-LeafVillageLegends.lua
+Core\Core.lua
 _generated_RaidSoftReserveLoot.lua
 Work order DB\Crafting.lua
 Work order DB\SpellInfo.lua
